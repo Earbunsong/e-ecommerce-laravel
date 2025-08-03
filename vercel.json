@@ -2,11 +2,11 @@
     "version": 2,
     "builds": [
         {
-            "src": "/api/index.php",
+            "src": "api/index.php",
             "use": "vercel-php@0.7.1"
         },
         {
-            "src": "/public/**",
+            "src": "public/**",
             "use": "@vercel/static"
         }
     ],
@@ -14,10 +14,6 @@
         {
             "src": "/build/(.*)",
             "dest": "/public/build/$1"
-        },
-        {
-            "src": "/storage/(.*)",
-            "dest": "/storage/app/public/$1"
         },
         {
             "src": "/(css|js|images|fonts)/(.*)",
@@ -47,11 +43,5 @@
         "SESSION_DRIVER": "cookie",
         "CACHE_DRIVER": "array",
         "QUEUE_CONNECTION": "sync"
-    },
-    "functions": {
-        "api/index.php": {
-            "runtime": "vercel-php@0.7.1",
-            "includeFiles": "vendor/**"
-        }
     }
 }
