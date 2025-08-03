@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "vercel-build": "vite build"
+        "vercel-build": ""
+
     },
     "devDependencies": {
         "@popperjs/core": "^2.11.6",
