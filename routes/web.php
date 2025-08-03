@@ -1,6 +1,10 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -11,38 +15,29 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-Route::get('/', function() { return view('home'); });
-Route::get('/products', function() { return view('products.index'); });
-Route::get('/product/{id}', function($id) { return view('products.show'); });
-Route::get('/cart', function() { return view('cart.index'); });
-Route::get('/checkout', function() { return view('checkout'); });
-Route::post('/cart/add', function (Illuminate\Http\Request $request) {
-    $cart = session()->get('cart', []);
+// Home
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    $id = $request->id;
-    if (isset($cart[$id])) {
-        $cart[$id]['quantity'] += $request->quantity;
-    } else {
-        $cart[$id] = [
-            'name' => $request->name,
-            'price' => $request->price,
-            'image' => $request->image,
-            'quantity' => $request->quantity,
-        ];
-    }
+// Products
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/search', [ProductController::class, 'search'])->name('products.search');
 
-    session()->put('cart', $cart);
-    return redirect('/cart')->with('success', 'Product added to cart!');
-});
+// Cart Routes - FIXED
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
-Route::get('/cart', function () {
-    $cart = session()->get('cart', []);
-    return view('cart.index', compact('cart'));
-});
+// Wishlist Routes
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+Route::post('/wishlist/toggle/{id}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+Route::post('/wishlist/remove/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+
+// Checkout
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
 require __DIR__.'/auth.php';

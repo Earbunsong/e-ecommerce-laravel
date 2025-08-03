@@ -1,20 +1,75 @@
 <?php
-
+// app/Http/Controllers/ProductController.php
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class HomeController extends Controller
+class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = $this->getCategories();
-        $featuredProducts = collect($this->getAllProducts())->take(4);
-        $brands = $this->getBrands();
+        $allProducts = collect($this->getAllProducts());
+        $categories = $this->getCategories(); // This method was missing - now added below
+        $brands = $allProducts->pluck('brand')->unique()->sort()->values();
 
-        return view('home', compact('categories', 'featuredProducts', 'brands'));
+        // Apply filters
+        $products = $allProducts;
+
+        if ($request->category && $request->category !== 'all') {
+            $products = $products->where('category', $request->category);
+        }
+
+        if ($request->brand && !empty($request->brand)) {
+            $selectedBrands = is_array($request->brand) ? $request->brand : [$request->brand];
+            $products = $products->whereIn('brand', $selectedBrands);
+        }
+
+        if ($request->price_range) {
+            $products = $this->filterByPriceRange($products, $request->price_range);
+        }
+
+        if ($request->q) {
+            $query = strtolower(trim($request->q));
+            $products = $products->filter(function ($product) use ($query) {
+                return str_contains(strtolower($product['name']), $query) ||
+                    str_contains(strtolower($product['category']), $query) ||
+                    str_contains(strtolower($product['brand']), $query) ||
+                    str_contains(strtolower($product['description'] ?? ''), $query);
+            });
+        }
+
+        // Apply sorting
+        if ($request->sort) {
+            $products = $this->sortProducts($products, $request->sort);
+        }
+
+        return view('products.index', compact('products', 'categories', 'brands'));
     }
 
+    public function show($id)
+    {
+        $product = collect($this->getAllProducts())->firstWhere('id', (int)$id);
+
+        if (!$product) {
+            abort(404, 'Product not found');
+        }
+
+        $relatedProducts = collect($this->getAllProducts())
+            ->where('category', $product['category'])
+            ->where('id', '!=', $product['id'])
+            ->take(4);
+
+        $isWishlisted = in_array($id, session('wishlist', []));
+
+        return view('products.show', compact('product', 'relatedProducts', 'isWishlisted'));
+    }
+
+    public function search(Request $request)
+    {
+        return $this->index($request);
+    }
+
+    // FIXED: Added the missing getCategories method
     private function getCategories()
     {
         return [
@@ -27,11 +82,41 @@ class HomeController extends Controller
         ];
     }
 
-    private function getBrands()
+    private function filterByPriceRange($products, $range)
     {
-        return ['Dell', 'HP', 'ASUS', 'Lenovo', 'Microsoft', 'Canon', 'Samsung', 'TP-Link', 'Logitech'];
+        switch ($range) {
+            case '0-100':
+                return $products->where('price', '<=', 100);
+            case '100-500':
+                return $products->where('price', '>', 100)->where('price', '<=', 500);
+            case '500-1000':
+                return $products->where('price', '>', 500)->where('price', '<=', 1000);
+            case '1000+':
+                return $products->where('price', '>', 1000);
+            default:
+                return $products;
+        }
     }
 
+    private function sortProducts($products, $sort)
+    {
+        switch ($sort) {
+            case 'price-low':
+                return $products->sortBy('price')->values();
+            case 'price-high':
+                return $products->sortByDesc('price')->values();
+            case 'name':
+                return $products->sortBy('name')->values();
+            case 'rating':
+                return $products->sortByDesc('rating')->values();
+            case 'newest':
+                return $products->sortByDesc('id')->values();
+            default:
+                return $products->values();
+        }
+    }
+
+    // FIXED: Added complete getAllProducts method
     private function getAllProducts()
     {
         return [
@@ -47,6 +132,7 @@ class HomeController extends Controller
                 'rating' => 4,
                 'review_count' => 128,
                 'in_stock' => true,
+                'stock_quantity' => 15,
                 'specs' => [
                     'Intel Core i5-1135G7 Processor',
                     '8GB DDR4 RAM',
@@ -56,7 +142,9 @@ class HomeController extends Controller
                     'Windows 11 Home'
                 ],
                 'description' => 'Perfect laptop for everyday computing with reliable performance and modern features.',
-                'sku' => 'DELL-INSP15-001'
+                'sku' => 'DELL-INSP15-001',
+                'colors' => ['Black', 'Silver'],
+                'storage_options' => ['256GB', '512GB', '1TB']
             ],
             [
                 'id' => 2,
@@ -70,6 +158,7 @@ class HomeController extends Controller
                 'rating' => 5,
                 'review_count' => 89,
                 'in_stock' => true,
+                'stock_quantity' => 8,
                 'specs' => [
                     'AMD Ryzen 5 5600G Processor',
                     '16GB DDR4 RAM',
@@ -79,7 +168,9 @@ class HomeController extends Controller
                     'Windows 11 Home'
                 ],
                 'description' => 'High-performance gaming desktop with powerful graphics and fast processing.',
-                'sku' => 'HP-PAV-GAME-002'
+                'sku' => 'HP-PAV-GAME-002',
+                'colors' => ['Black'],
+                'storage_options' => ['512GB', '1TB', '2TB']
             ],
             [
                 'id' => 3,
@@ -93,6 +184,7 @@ class HomeController extends Controller
                 'rating' => 5,
                 'review_count' => 256,
                 'in_stock' => true,
+                'stock_quantity' => 50,
                 'specs' => [
                     'Advanced 2.4GHz Wireless',
                     'Bluetooth Low Energy',
@@ -102,7 +194,8 @@ class HomeController extends Controller
                     'Ergonomic Design'
                 ],
                 'description' => 'Premium wireless mouse designed for power users and professionals.',
-                'sku' => 'LOGI-MXM3-003'
+                'sku' => 'LOGI-MXM3-003',
+                'colors' => ['Graphite', 'Light Gray', 'Mid Gray']
             ],
             [
                 'id' => 4,
@@ -116,6 +209,7 @@ class HomeController extends Controller
                 'rating' => 4,
                 'review_count' => 167,
                 'in_stock' => true,
+                'stock_quantity' => 12,
                 'specs' => [
                     '27" Curved VA Panel',
                     '2560 x 1440 Resolution',
@@ -138,7 +232,8 @@ class HomeController extends Controller
                 'brand' => 'Canon',
                 'rating' => 4,
                 'review_count' => 94,
-                'in_stock' => true,
+                'in_stock' => false,
+                'stock_quantity' => 0,
                 'specs' => [
                     'Print, Scan, Copy, Fax',
                     'Wireless & Ethernet',
@@ -162,6 +257,7 @@ class HomeController extends Controller
                 'rating' => 5,
                 'review_count' => 203,
                 'in_stock' => true,
+                'stock_quantity' => 25,
                 'specs' => [
                     'Wi-Fi 6 (802.11ax)',
                     'Dual-Band up to 3 Gbps',
@@ -185,6 +281,7 @@ class HomeController extends Controller
                 'rating' => 5,
                 'review_count' => 312,
                 'in_stock' => true,
+                'stock_quantity' => 5,
                 'specs' => [
                     'AMD Ryzen 7 5800H',
                     '16GB DDR4 RAM',
@@ -194,7 +291,9 @@ class HomeController extends Controller
                     'RGB Backlit Keyboard'
                 ],
                 'description' => 'High-performance gaming laptop with powerful graphics and premium features.',
-                'sku' => 'ASUS-ROG-G15-007'
+                'sku' => 'ASUS-ROG-G15-007',
+                'colors' => ['Eclipse Gray', 'Original Black'],
+                'storage_options' => ['512GB', '1TB', '2TB']
             ],
             [
                 'id' => 8,
@@ -208,6 +307,7 @@ class HomeController extends Controller
                 'rating' => 4,
                 'review_count' => 67,
                 'in_stock' => true,
+                'stock_quantity' => 3,
                 'specs' => [
                     'Intel Core i7-11370H',
                     '32GB LPDDR4x RAM',
@@ -217,7 +317,8 @@ class HomeController extends Controller
                     'Windows 11 Pro'
                 ],
                 'description' => 'Professional all-in-one desktop perfect for creative professionals.',
-                'sku' => 'MSFT-SURF-STU-008'
+                'sku' => 'MSFT-SURF-STU-008',
+                'colors' => ['Platinum']
             ],
             [
                 'id' => 9,
@@ -231,6 +332,7 @@ class HomeController extends Controller
                 'rating' => 5,
                 'review_count' => 445,
                 'in_stock' => true,
+                'stock_quantity' => 30,
                 'specs' => [
                     'Focus Pro 30K Sensor',
                     '90-hour Battery Life',
@@ -240,7 +342,8 @@ class HomeController extends Controller
                     'Ergonomic Design'
                 ],
                 'description' => 'Professional gaming mouse with precision sensor and long battery life.',
-                'sku' => 'RAZER-DA-V3-009'
+                'sku' => 'RAZER-DA-V3-009',
+                'colors' => ['Black', 'White']
             ],
             [
                 'id' => 10,
@@ -254,6 +357,7 @@ class HomeController extends Controller
                 'rating' => 5,
                 'review_count' => 189,
                 'in_stock' => true,
+                'stock_quantity' => 7,
                 'specs' => [
                     '32" IPS UltraWide Display',
                     '3840 x 1600 Resolution',

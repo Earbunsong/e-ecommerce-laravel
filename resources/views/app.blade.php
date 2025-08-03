@@ -8,7 +8,7 @@
 </head>
 <body>
 <!-- Navbar -->
-@include('partials.navbar')
+@include('partials.header')
 
 <!-- Main Content -->
 <div class="container mt-4">
