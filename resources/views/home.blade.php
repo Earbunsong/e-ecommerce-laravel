@@ -23,23 +23,63 @@
     <section id="categories" class="py-12 bg-gray-50">
         <div class="container max-w-screen-xl mx-auto px-4">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold">Popular Categories</h2>
-                <a href="{{ route('products.index') }}" class="text-amber-600 hover:text-amber-700 transition-colors">View All →</a>
+                <h2 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-th-large mr-2 text-blue-600"></i>Popular Categories
+                </h2>
+                <a href="{{ route('products.index') }}" class="text-blue-600 hover:text-blue-700 font-semibold transition-colors flex items-center">
+                    View All <i class="fas fa-arrow-right ml-2"></i>
+                </a>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 justify-items-center">
-                @foreach($categories as $category)
-                    <a href="{{ route('products.index', ['category' => $category->name]) }}" class="group w-full max-w-[180px]">
-                        <div class="bg-white rounded-lg shadow hover:shadow-md overflow-hidden text-center category-card">
-                            <div class="h-36 w-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                                <i class="fas fa-{{ $category->name === 'Laptops' ? 'laptop' : ($category->name === 'Desktops' ? 'desktop' : ($category->name === 'Accessories' ? 'mouse' : ($category->name === 'Monitors' ? 'tv' : ($category->name === 'Printers' ? 'print' : 'wifi')))) }} text-4xl text-blue-600"></i>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-medium">{{ $category->name }}</h3>
-                                <p class="text-sm text-gray-500">{{ $category->products_count }} products</p>
-                            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                @forelse($categories as $category)
+                    <a href="{{ route('products.index', ['category' => $category->slug]) }}"
+                       class="group bg-white rounded-xl shadow-sm hover:shadow-lg overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                            @if($category->image)
+                                <img src="{{ asset('storage/' . $category->image) }}"
+                                     alt="{{ $category->name }}"
+                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                     loading="lazy"
+                                     onerror="this.onerror=null; this.src='{{ asset('images/placeholder-category.png') }}';">
+                            @else
+                                {{-- Fallback icon based on category name --}}
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-{{
+                                        Str::contains(Str::lower($category->name), 'laptop') ? 'laptop' :
+                                        (Str::contains(Str::lower($category->name), ['desktop', 'pc']) ? 'desktop' :
+                                        (Str::contains(Str::lower($category->name), ['mouse', 'keyboard', 'accessory', 'accessories']) ? 'mouse' :
+                                        (Str::contains(Str::lower($category->name), 'monitor') ? 'tv' :
+                                        (Str::contains(Str::lower($category->name), 'print') ? 'print' :
+                                        (Str::contains(Str::lower($category->name), ['network', 'wifi', 'router']) ? 'wifi' :
+                                        (Str::contains(Str::lower($category->name), 'storage') ? 'hdd' :
+                                        (Str::contains(Str::lower($category->name), 'headphone') ? 'headphones' :
+                                        'microchip')))))))
+                                    }} text-5xl text-blue-600 group-hover:text-blue-700 transition-colors"></i>
+                                </div>
+                            @endif
+
+                            {{-- Product count badge --}}
+                            @if($category->products_count > 0)
+                                <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                                    {{ $category->products_count }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-3 text-center">
+                            <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                                {{ $category->name }}
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $category->products_count }} {{ Str::plural('item', $category->products_count) }}
+                            </p>
                         </div>
                     </a>
-                @endforeach
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">No categories available yet</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>

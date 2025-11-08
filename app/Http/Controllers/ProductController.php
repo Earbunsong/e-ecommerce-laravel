@@ -15,7 +15,16 @@ class ProductController extends Controller
 
         // Apply category filter
         if ($request->category && $request->category !== 'all') {
-            $query->where('category_id', $request->category);
+            // Check if category is a slug or an ID
+            if (is_numeric($request->category)) {
+                $query->where('category_id', $request->category);
+            } else {
+                // Look up category by slug
+                $category = Category::where('slug', $request->category)->first();
+                if ($category) {
+                    $query->where('category_id', $category->id);
+                }
+            }
         }
 
         // Apply brand filter

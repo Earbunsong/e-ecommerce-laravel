@@ -81,7 +81,7 @@ class CategoryController extends Controller
         }
 
         // Set defaults
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $validated['is_active'] ?? true;
         $validated['display_order'] = $validated['display_order'] ?? 0;
 
         Category::create($validated);
@@ -137,8 +137,8 @@ class CategoryController extends Controller
             $validated['image'] = $request->file('image')->store('categories', 'public');
         }
 
-        // Handle is_active checkbox
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        // Handle is_active checkbox - default to current value
+        $validated['is_active'] = $validated['is_active'] ?? $category->is_active;
         $validated['display_order'] = $validated['display_order'] ?? $category->display_order;
 
         $category->update($validated);
