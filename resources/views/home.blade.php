@@ -28,14 +28,14 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 justify-items-center">
                 @foreach($categories as $category)
-                    <a href="{{ route('products.index', ['category' => $category['name']]) }}" class="group w-full max-w-[180px]">
+                    <a href="{{ route('products.index', ['category' => $category->name]) }}" class="group w-full max-w-[180px]">
                         <div class="bg-white rounded-lg shadow hover:shadow-md overflow-hidden text-center category-card">
                             <div class="h-36 w-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                                <i class="fas fa-{{ $category['name'] === 'Laptops' ? 'laptop' : ($category['name'] === 'Desktops' ? 'desktop' : ($category['name'] === 'Accessories' ? 'mouse' : ($category['name'] === 'Monitors' ? 'tv' : ($category['name'] === 'Printers' ? 'print' : 'wifi')))) }} text-4xl text-blue-600"></i>
+                                <i class="fas fa-{{ $category->name === 'Laptops' ? 'laptop' : ($category->name === 'Desktops' ? 'desktop' : ($category->name === 'Accessories' ? 'mouse' : ($category->name === 'Monitors' ? 'tv' : ($category->name === 'Printers' ? 'print' : 'wifi')))) }} text-4xl text-blue-600"></i>
                             </div>
                             <div class="p-4">
-                                <h3 class="font-medium">{{ $category['name'] }}</h3>
-                                <p class="text-sm text-gray-500">{{ $category['count'] }} products</p>
+                                <h3 class="font-medium">{{ $category->name }}</h3>
+                                <p class="text-sm text-gray-500">{{ $category->products_count }} products</p>
                             </div>
                         </div>
                     </a>

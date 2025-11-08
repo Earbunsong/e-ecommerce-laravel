@@ -42,28 +42,59 @@ class CheckoutController extends Controller
         // Generate order number
         $orderNumber = 'K2-' . strtoupper(str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT));
 
-        // In a real application, you would:
-        // 1. Save order to database
-        // 2. Process payment
-        // 3. Send email confirmation
-        // 4. Update inventory
+        $cartItems = $this->getCartItemsWithDetails($cart);
+        $totals = $this->calculateTotals($cartItems);
 
-        // Store order details in session temporarily
-        session([
-            'last_order' => [
-                'order_number' => $orderNumber,
-                'customer' => $request->only(['first_name', 'last_name', 'email', 'phone']),
-                'items' => $this->getCartItemsWithDetails($cart),
-                'totals' => $this->calculateTotals($this->getCartItemsWithDetails($cart)),
-                'created_at' => now()
-            ]
-        ]);
+        // Prepare order data
+        $orderData = [
+            'order_number' => $orderNumber,
+            'customer' => $request->only(['first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code']),
+            'items' => $cartItems,
+            'totals' => $totals,
+            'payment_method' => $request->payment_method,
+            'created_at' => now()
+        ];
 
-        // Clear cart
-        session()->forget('cart');
+        // Handle different payment methods
+        switch ($request->payment_method) {
+            case 'khqr':
+                // Store pending order for KHQR payment
+                session(['pending_order' => $orderData]);
 
-        return redirect()->route('checkout.success', ['order' => $orderNumber])
-            ->with('success', 'Order placed successfully!');
+                // Redirect to KHQR payment page
+                return redirect()->route('payment.khqr.show');
+
+            case 'card':
+                // TODO: Implement card payment gateway integration
+                // For now, redirect to a card payment page (to be created)
+                session(['pending_order' => $orderData]);
+                return redirect()->route('checkout.index')
+                    ->with('info', 'Card payment integration coming soon. Please use KHQR or COD.');
+
+            case 'cod':
+                // For Cash on Delivery, directly complete the order
+                // In a real application, you would:
+                // 1. Save order to database with 'pending' payment status
+                // 2. Send email confirmation
+                // 3. Update inventory
+
+                session([
+                    'last_order' => array_merge($orderData, [
+                        'payment_status' => 'pending',
+                        'payment_note' => 'Cash on Delivery'
+                    ])
+                ]);
+
+                // Clear cart
+                session()->forget('cart');
+
+                return redirect()->route('checkout.success', ['order' => $orderNumber])
+                    ->with('success', 'Order placed successfully! Pay cash upon delivery.');
+
+            default:
+                return redirect()->route('checkout.index')
+                    ->with('error', 'Invalid payment method selected.');
+        }
     }
 
     public function success($orderNumber)

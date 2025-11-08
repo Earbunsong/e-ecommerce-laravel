@@ -35,4 +35,24 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | KHQR Payment Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for KHQR (Khmer Quick Response) payment integration
+    | with Bakong. This is Cambodia's national payment system.
+    |
+    */
+
+    'khqr' => [
+        'enabled' => env('KHQR_ENABLED', false),
+        'api_token' => env('KHQR_API_TOKEN'),
+        'account_id' => env('KHQR_ACCOUNT_ID'),
+        'merchant_name' => env('KHQR_MERCHANT_NAME'),
+        'merchant_city' => env('KHQR_MERCHANT_CITY'),
+        // Note: Currency is hardcoded to KHR in the controller using KHQRData::CURRENCY_KHR constant
+        'transaction_type' => env('KHQR_TRANSACTION_TYPE', 'PP'),
+    ],
+
 ];

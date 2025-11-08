@@ -12,9 +12,16 @@
         </nav>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <div>
-                <img src="{{ asset('images/'.$product['image']) }}" alt="{{ $product['name'] }}" class="w-full rounded-lg shadow-lg">
+{{--            <div>--}}
+{{--                <img src="{{ asset('images/'.$product['image']) }}" alt="{{ $product['name'] }}" class="w-full rounded-lg shadow-lg">--}}
+{{--                <img src="{{ asset('images/products/dell-inspiron-15.jpg')}}" alt="{{ $product['name'] }}" class="w-full rounded-lg shadow-lg">--}}
+{{--            </div>--}}
+            <div class="flex justify-center">
+                <img src="{{ asset('images/'.$product['image']) }}"
+                     alt="{{ $product['name'] }}"
+                     class="w-full max-w-md h-auto rounded-lg shadow-lg object-contain">
             </div>
+
             <div>
                 <h1 class="text-3xl font-bold mb-4">{{ $product['name'] }}</h1>
 

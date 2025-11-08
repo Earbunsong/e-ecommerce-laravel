@@ -3,6 +3,7 @@
 // app/Http/Controllers/CartController.php
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -121,16 +122,21 @@ class CartController extends Controller
 
     private function getCartItemsWithDetails($cart)
     {
-        $products = collect($this->getAllProducts())->keyBy('id');
+        $productIds = array_column($cart, 'id');
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
         return collect($cart)->map(function ($item) use ($products) {
             $product = $products->get($item['id']);
-            return array_merge($item, [
-                'name' => $product['name'] ?? $item['name'],
-                'image' => $product['image'] ?? $item['image'],
-                'price' => $product['price'] ?? $item['price'],
-                'in_stock' => $product['in_stock'] ?? true
-            ]);
+            if ($product) {
+                return array_merge($item, [
+                    'name' => $product->name,
+                    'image' => $product->image,
+                    'price' => (float) $product->price,
+                    'in_stock' => $product->in_stock,
+                    'stock_quantity' => $product->stock_quantity
+                ]);
+            }
+            return $item;
         })->values()->toArray();
     }
 
@@ -149,77 +155,7 @@ class CartController extends Controller
 
     private function findProduct($id)
     {
-        return collect($this->getAllProducts())->firstWhere('id', (int) $id);
-    }
-
-    private function getAllProducts()
-    {
-        return [
-            [
-                'id' => 1,
-                'name' => 'Dell Inspiron 15 3000 Laptop',
-                'price' => 699.99,
-                'original_price' => 799.99,
-                'image' => 'products/dell-laptop.jpg',
-                'category' => 'Laptops',
-                'brand' => 'Dell',
-                'rating' => 4,
-                'review_count' => 128,
-                'in_stock' => true,
-                'sku' => 'DELL-001'
-            ],
-            [
-                'id' => 2,
-                'name' => 'HP Gaming Desktop',
-                'price' => 899.99,
-                'original_price' => 1099.99,
-                'image' => 'products/hp-desktop.jpg',
-                'category' => 'Desktops',
-                'brand' => 'HP',
-                'rating' => 5,
-                'review_count' => 89,
-                'in_stock' => true,
-                'sku' => 'HP-002'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Logitech Wireless Mouse',
-                'price' => 89.99,
-                'original_price' => 109.99,
-                'image' => 'products/mouse.jpg',
-                'category' => 'Accessories',
-                'brand' => 'Logitech',
-                'rating' => 5,
-                'review_count' => 256,
-                'in_stock' => true,
-                'sku' => 'LOGI-003'
-            ],
-            [
-                'id' => 4,
-                'name' => 'Samsung 27" Monitor',
-                'price' => 299.99,
-                'original_price' => 379.99,
-                'image' => 'products/monitor.jpg',
-                'category' => 'Monitors',
-                'brand' => 'Samsung',
-                'rating' => 4,
-                'review_count' => 167,
-                'in_stock' => true,
-                'sku' => 'SAMS-004'
-            ],
-            [
-                'id' => 5,
-                'name' => 'Canon Printer',
-                'price' => 179.99,
-                'original_price' => 229.99,
-                'image' => 'products/printer.jpg',
-                'category' => 'Printers',
-                'brand' => 'Canon',
-                'rating' => 4,
-                'review_count' => 94,
-                'in_stock' => false,
-                'sku' => 'CANON-005'
-            ]
-        ];
+        $product = Product::active()->find($id);
+        return $product ? $product->toArray() : null;
     }
 }

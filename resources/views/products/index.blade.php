@@ -111,7 +111,6 @@
                         <option value="rating" {{ request('sort') === 'rating' ? 'selected' : '' }}>Highest Rated</option>
                         <option value="newest" {{ request('sort') === 'newest' ? 'selected' : '' }}>Newest First</option>
                     </select>
-                </form>
             </div>
 
             {{-- Products or No Results --}}

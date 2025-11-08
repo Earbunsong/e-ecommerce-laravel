@@ -2,14 +2,24 @@
 
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\KhqrController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+//include 'admin/khqr.php';
+
+//Route::post('/generate-qrcode', [KhqrController::class, 'generateQRCode']);
+
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -39,5 +49,38 @@ Route::post('/wishlist/remove/{id}', [WishlistController::class, 'remove'])->nam
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+// KHQR Payment Routes
+Route::get('/payment/khqr', [KhqrController::class, 'show'])->name('payment.khqr.show');
+Route::post('/payment/khqr/check', [KhqrController::class, 'checkTransaction'])->name('payment.khqr.check');
+Route::post('/payment/khqr/verify', [KhqrController::class, 'verifyPayment'])->name('payment.khqr.verify');
+
+// Admin Dashboard
+Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+// Admin Categories
+Route::prefix('admin/categories')->name('admin.categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [CategoryController::class, 'create'])->name('create');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
+    Route::get('/{category}', [CategoryController::class, 'show'])->name('show');
+    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+    Route::patch('/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('toggle-status');
+});
+
+// Admin Products
+Route::prefix('admin/products')->name('admin.products.')->group(function () {
+    Route::get('/', [AdminProductController::class, 'index'])->name('index');
+    Route::get('/create', [AdminProductController::class, 'create'])->name('create');
+    Route::post('/', [AdminProductController::class, 'store'])->name('store');
+    Route::get('/{product}', [AdminProductController::class, 'show'])->name('show');
+    Route::get('/{product}/edit', [AdminProductController::class, 'edit'])->name('edit');
+    Route::put('/{product}', [AdminProductController::class, 'update'])->name('update');
+    Route::delete('/{product}', [AdminProductController::class, 'destroy'])->name('destroy');
+    Route::patch('/{product}/toggle-status', [AdminProductController::class, 'toggleStatus'])->name('toggle-status');
+    Route::patch('/{product}/toggle-featured', [AdminProductController::class, 'toggleFeatured'])->name('toggle-featured');
+});
 
 require __DIR__.'/auth.php';
