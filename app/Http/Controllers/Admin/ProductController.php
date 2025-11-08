@@ -90,6 +90,10 @@ class ProductController extends Controller
         // Auto-set in_stock based on stock_quantity
         $validated['in_stock'] = $validated['stock_quantity'] > 0;
 
+        // Handle checkboxes (they won't be in request if unchecked)
+        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? true : false;
+
         Product::create($validated);
 
         return redirect()->route('admin.products.index')
@@ -160,6 +164,10 @@ class ProductController extends Controller
 
         // Auto-set in_stock based on stock_quantity
         $validated['in_stock'] = $validated['stock_quantity'] > 0;
+
+        // Handle checkboxes (they won't be in request if unchecked)
+        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? true : false;
 
         $product->update($validated);
 
