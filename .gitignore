@@ -24,3 +24,5 @@ Homestead.yaml
 Thumbs.db
 
 .vercel
+ADMIN_UI_DESIGN.md
+*.md
