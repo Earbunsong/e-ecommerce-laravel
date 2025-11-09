@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -289,7 +290,7 @@ class KhqrController extends Controller
             }
 
             // Create payment record
-            Payment::create([
+            $payment = Payment::create([
                 'order_id' => $order->id,
                 'payment_method' => 'khqr',
                 'transaction_id' => $checkData['transaction']['transaction_id'] ?? $checkData['data']['data']['externalRef'] ?? null,
@@ -307,6 +308,15 @@ class KhqrController extends Controller
                 'status' => 'processing',
                 'paid_at' => now(),
             ]);
+
+            // Send Telegram notification for payment received
+            try {
+                $telegramService = new TelegramNotificationService();
+                $telegramService->sendPaymentReceivedNotification($payment->fresh('order'));
+            } catch (\Exception $e) {
+                // Log error but don't stop the payment process
+                Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+            }
 
             // Send order confirmation email
             try {

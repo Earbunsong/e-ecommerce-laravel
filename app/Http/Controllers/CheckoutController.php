@@ -5,6 +5,7 @@ use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -93,6 +94,15 @@ class CheckoutController extends Controller
 
             return $order;
         });
+
+        // Send Telegram notification for new order
+        try {
+            $telegramService = new TelegramNotificationService();
+            $telegramService->sendNewOrderNotification($order->fresh('items'));
+        } catch (\Exception $e) {
+            // Log error but don't stop the checkout process
+            \Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+        }
 
         // Handle different payment methods
         switch ($request->payment_method) {

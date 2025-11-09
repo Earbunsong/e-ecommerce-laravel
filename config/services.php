@@ -55,4 +55,20 @@ return [
         'transaction_type' => env('KHQR_TRANSACTION_TYPE', 'PP'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Telegram Notification Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for Telegram bot notifications. The bot will send
+    | notifications to the specified channel about orders, payments, and alerts.
+    |
+    */
+
+    'telegram' => [
+        'enabled' => env('TELEGRAM_ENABLED', false),
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'channel_id' => env('TELEGRAM_CHANNEL_ID'), // Can be @channel_username or numeric ID
+    ],
+
 ];
