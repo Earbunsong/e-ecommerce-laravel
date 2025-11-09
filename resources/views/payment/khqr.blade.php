@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>KHQR Payment - K2 Computer</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-50">
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -28,9 +30,7 @@
                 <!-- QR Code -->
                 <div class="flex justify-center mb-6">
                     <div class="bg-white p-4 rounded-lg border-2 border-gray-200">
-                        <img src="data:image/png;base64,{{ $qrCode }}"
-                             alt="KHQR Payment QR Code"
-                             class="w-64 h-64">
+                        <div id="qrcode" class="flex items-center justify-center"></div>
                     </div>
                 </div>
 
@@ -96,6 +96,7 @@
         // Configuration
         const MD5_HASH = '{{ $md5 }}';
         const ORDER_NUMBER = '{{ $order['order_number'] }}';
+        const KHQR_STRING = '{{ $qrCode }}'; // Raw KHQR string
         const CHECK_INTERVAL = 3000; // Check every 3 seconds
         const TIMEOUT_MINUTES = 15;
 
@@ -106,8 +107,18 @@
         // CSRF Token setup
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-        // Start checking for payment
+        // Generate QR Code
         document.addEventListener('DOMContentLoaded', function() {
+            // Generate QR code from KHQR string
+            new QRCode(document.getElementById("qrcode"), {
+                text: KHQR_STRING,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
             startTimer();
             startPaymentCheck();
         });

@@ -64,16 +64,16 @@ class ProductController extends Controller
             'sku' => 'required|string|max:50|unique:products,sku',
             'stock_quantity' => 'required|integer|min:0',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'rating' => 'nullable|integer|min:0|max:5',
+            'rating' => 'nullable|numeric|min:0|max:5',
             'review_count' => 'nullable|integer|min:0',
             'specs' => 'nullable|array',
-            'specs.*' => 'string',
+            'specs.*' => 'nullable|string',
             'colors' => 'nullable|array',
-            'colors.*' => 'string',
+            'colors.*' => 'nullable|string',
             'storage_options' => 'nullable|array',
-            'storage_options.*' => 'string',
-            'is_featured' => 'boolean',
-            'is_active' => 'boolean'
+            'storage_options.*' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean'
         ]);
 
         // Handle image upload
@@ -82,8 +82,19 @@ class ProductController extends Controller
             $validated['image'] = $imagePath;
         }
 
+        // Filter out empty array values
+        if (isset($validated['specs'])) {
+            $validated['specs'] = array_values(array_filter($validated['specs'], fn($v) => !empty($v)));
+        }
+        if (isset($validated['colors'])) {
+            $validated['colors'] = array_values(array_filter($validated['colors'], fn($v) => !empty($v)));
+        }
+        if (isset($validated['storage_options'])) {
+            $validated['storage_options'] = array_values(array_filter($validated['storage_options'], fn($v) => !empty($v)));
+        }
+
         // Calculate discount if original price provided
-        if ($validated['original_price'] && $validated['original_price'] > $validated['price']) {
+        if (isset($validated['original_price']) && $validated['original_price'] && $validated['original_price'] > $validated['price']) {
             $validated['discount'] = round((($validated['original_price'] - $validated['price']) / $validated['original_price']) * 100);
         }
 
@@ -133,16 +144,16 @@ class ProductController extends Controller
             'sku' => 'required|string|max:50|unique:products,sku,' . $product->id,
             'stock_quantity' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'rating' => 'nullable|integer|min:0|max:5',
+            'rating' => 'nullable|numeric|min:0|max:5',
             'review_count' => 'nullable|integer|min:0',
             'specs' => 'nullable|array',
-            'specs.*' => 'string',
+            'specs.*' => 'nullable|string',
             'colors' => 'nullable|array',
-            'colors.*' => 'string',
+            'colors.*' => 'nullable|string',
             'storage_options' => 'nullable|array',
-            'storage_options.*' => 'string',
-            'is_featured' => 'boolean',
-            'is_active' => 'boolean'
+            'storage_options.*' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean'
         ]);
 
         // Handle image upload
@@ -155,8 +166,19 @@ class ProductController extends Controller
             $validated['image'] = $imagePath;
         }
 
+        // Filter out empty array values
+        if (isset($validated['specs'])) {
+            $validated['specs'] = array_values(array_filter($validated['specs'], fn($v) => !empty($v)));
+        }
+        if (isset($validated['colors'])) {
+            $validated['colors'] = array_values(array_filter($validated['colors'], fn($v) => !empty($v)));
+        }
+        if (isset($validated['storage_options'])) {
+            $validated['storage_options'] = array_values(array_filter($validated['storage_options'], fn($v) => !empty($v)));
+        }
+
         // Calculate discount if original price provided
-        if (isset($validated['original_price']) && $validated['original_price'] > $validated['price']) {
+        if (isset($validated['original_price']) && $validated['original_price'] && $validated['original_price'] > $validated['price']) {
             $validated['discount'] = round((($validated['original_price'] - $validated['price']) / $validated['original_price']) * 100);
         } else {
             $validated['discount'] = null;

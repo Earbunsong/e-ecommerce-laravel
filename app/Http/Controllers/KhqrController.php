@@ -118,19 +118,42 @@ class KhqrController extends Controller
             // Generate QR code
             $qrData = BakongKHQR::generateIndividual($individualInfo);
 
+            // Check if QR generation was successful
+            if ($qrData->status['code'] !== 0) {
+                Log::error('KHQR generation failed with error code', [
+                    'status' => $qrData->status,
+                    'data' => $qrData->data
+                ]);
+                return [
+                    'success' => false,
+                    'message' => $qrData->status['message'] ?? 'Failed to generate QR code.'
+                ];
+            }
+
+            // Validate QR data
+            if (empty($qrData->data['qr']) || empty($qrData->data['md5'])) {
+                Log::error('KHQR data is incomplete', [
+                    'data' => $qrData->data
+                ]);
+                return [
+                    'success' => false,
+                    'message' => 'QR code data is incomplete.'
+                ];
+            }
+
             // Log successful QR generation
-            Log::info('KHQR QR Code generated', [
+            Log::info('KHQR QR Code generated successfully', [
                 'order_number' => $orderData['order_number'],
                 'amount' => $amount,
                 'currency' => $currency,
-                'qr_response' => get_class($qrData)
+                'md5' => $qrData->data['md5']
             ]);
 
-            // Handle the KHQRResponse object
+            // Return the QR data
             return [
                 'success' => true,
-                'qr_code' => $qrData->qr,
-                'md5' => $qrData->md5,
+                'qr_code' => $qrData->data['qr'],
+                'md5' => $qrData->data['md5'],
                 'amount' => $amount,
                 'currency' => $currency
             ];
@@ -187,14 +210,30 @@ class KhqrController extends Controller
             ]);
 
             // Check if payment is successful
-            // Note: Adjust this based on actual API response structure
-            $isPaid = isset($response['data']['status']) &&
-                      $response['data']['status'] === 'PAID';
+            // Payment is confirmed when acknowledgedDateMs is present (transaction acknowledged by Bakong)
+            $isPaid = isset($response['data']) &&
+                      isset($response['data']['acknowledgedDateMs']) &&
+                      !empty($response['data']['acknowledgedDateMs']);
+
+            if ($isPaid) {
+                Log::info('KHQR Payment DETECTED!', [
+                    'md5' => $md5,
+                    'transaction_id' => $response['data']['externalRef'] ?? null,
+                    'amount' => $response['data']['amount'] ?? null,
+                    'from' => $response['data']['fromAccountId'] ?? null
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
                 'paid' => $isPaid,
-                'data' => $response
+                'data' => $response,
+                'transaction' => $isPaid ? [
+                    'transaction_id' => $response['data']['externalRef'] ?? null,
+                    'amount' => $response['data']['amount'] ?? null,
+                    'from' => $response['data']['fromAccountId'] ?? null,
+                    'acknowledged_at' => $response['data']['acknowledgedDateMs'] ?? null
+                ] : null
             ]);
 
         } catch (\Exception $e) {
@@ -253,7 +292,7 @@ class KhqrController extends Controller
             Payment::create([
                 'order_id' => $order->id,
                 'payment_method' => 'khqr',
-                'transaction_id' => $checkData['data']['transaction_id'] ?? null,
+                'transaction_id' => $checkData['transaction']['transaction_id'] ?? $checkData['data']['data']['externalRef'] ?? null,
                 'md5_hash' => $md5,
                 'amount' => $order->total,
                 'currency' => 'USD',

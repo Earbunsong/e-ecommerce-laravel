@@ -46,6 +46,7 @@
             transform: translateX(0);
         }
     </style>
+    @stack('styles')
 </head>
 <body class="bg-gray-50">
 @include('partials.header')
@@ -103,23 +104,30 @@
         updateWishlistCount();
     });
 
-    // Simple Add to Cart Function
+    // Simple Add to Cart Function - Using API
     function addToCart(productId, quantity = 1) {
         // Show loading state
         const button = $(`button[onclick*="addToCart(${productId})"]`);
         const originalText = button.html();
         button.html('<i class="fas fa-spinner fa-spin mr-2"></i>Adding...').prop('disabled', true);
 
-        $.post(`/cart/add/${productId}`, {
-            quantity: quantity,
-            _token: $('meta[name="csrf-token"]').attr('content')
+        // Use API endpoint instead of traditional route
+        $.ajax({
+            url: `/api/cart/add/${productId}`,
+            method: 'POST',
+            data: {
+                quantity: quantity
+            },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
         })
             .done(function(response) {
                 if (response.success) {
                     showNotification(response.message, 'success');
                     updateCartCount(response.cart_count);
 
-                    // Show mini cart
+                    // Show mini cart with animation
                     if (response.item) {
                         showMiniCart(response.item);
                     }
@@ -178,11 +186,15 @@
             });
     }
 
-    // Remove from Cart
+    // Remove from Cart - Using API
     function removeFromCart(productId) {
         if (confirm('Remove this item from cart?')) {
-            $.post(`/cart/remove/${productId}`, {
-                _token: $('meta[name="csrf-token"]').attr('content')
+            $.ajax({
+                url: `/api/cart/remove/${productId}`,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
             })
                 .done(function(response) {
                     if (response.success) {
@@ -318,6 +330,121 @@
         setTimeout(() => {
             window.location.href = '/cart';
         }, 1000);
+    }
+
+    // ========================================
+    // Live Search Functionality
+    // ========================================
+    let searchTimeout;
+    const searchInput = document.getElementById('live-search-input');
+    const searchResults = document.getElementById('search-results');
+    const searchResultsContent = document.getElementById('search-results-content');
+
+    if (searchInput) {
+        // Listen for input changes
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+
+            // Hide results if query is empty
+            if (query.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            // Show loading state
+            searchResultsContent.innerHTML = `
+                <div class="p-4 text-center text-gray-500">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>Searching...
+                </div>
+            `;
+            searchResults.classList.remove('hidden');
+
+            // Debounce search (wait 300ms after user stops typing)
+            searchTimeout = setTimeout(() => {
+                performLiveSearch(query);
+            }, 300);
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('search-container').contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        // Prevent form submission when Enter is pressed if results are showing
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                searchResults.classList.add('hidden');
+            }
+        });
+    }
+
+    function performLiveSearch(query) {
+        fetch(`/api/products/search?q=${encodeURIComponent(query)}&per_page=5`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data.length > 0) {
+                    displaySearchResults(data.data, query);
+                } else {
+                    searchResultsContent.innerHTML = `
+                        <div class="p-4 text-center text-gray-500">
+                            <i class="fas fa-search mr-2"></i>No products found for "${query}"
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                searchResultsContent.innerHTML = `
+                    <div class="p-4 text-center text-red-500">
+                        <i class="fas fa-exclamation-circle mr-2"></i>Error performing search
+                    </div>
+                `;
+            });
+    }
+
+    function displaySearchResults(products, query) {
+        let html = '<div class="divide-y divide-gray-100">';
+
+        products.forEach(product => {
+            const price = parseFloat(product.price).toFixed(2);
+            const categoryName = product.category?.name || 'Uncategorized';
+
+            html += `
+                <a href="/products/${product.id}" class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors">
+                    <div class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-laptop text-gray-400 text-2xl"></i>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <h4 class="text-sm font-medium text-gray-900 truncate">${highlightQuery(product.name, query)}</h4>
+                        <p class="text-xs text-gray-500">${categoryName}</p>
+                        <p class="text-sm font-bold text-amber-600 mt-1">$${price}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-arrow-right text-gray-400"></i>
+                    </div>
+                </a>
+            `;
+        });
+
+        html += '</div>';
+
+        html += `
+            <a href="/products?q=${encodeURIComponent(query)}" class="block p-3 text-center text-amber-600 hover:bg-gray-50 border-t border-gray-200 font-medium">
+                View all results for "${query}" <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        `;
+
+        searchResultsContent.innerHTML = html;
+    }
+
+    function highlightQuery(text, query) {
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<span class="bg-yellow-200">$1</span>');
     }
 </script>
 @stack('scripts')

@@ -34,15 +34,28 @@
                 </a>
             </div>
 
-            {{-- Search Bar --}}
-            <form action="{{ route('products.search') }}" method="GET" class="flex-grow max-w-2xl mx-4 relative">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Search for products..."
-                       class="w-full py-2 pl-4 pr-24 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
-                <button type="submit"
-                        class="absolute right-0 top-0 h-full px-6 bg-amber-500 hover:bg-amber-600 text-white rounded-r-lg transition-colors">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
+            {{-- Search Bar with Live Search --}}
+            <div class="flex-grow max-w-2xl mx-4 relative" id="search-container">
+                <form action="{{ route('products.search') }}" method="GET" class="relative">
+                    <input type="text"
+                           id="live-search-input"
+                           name="q"
+                           value="{{ request('q') }}"
+                           placeholder="Search for products..."
+                           autocomplete="off"
+                           class="w-full py-2 pl-4 pr-24 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <button type="submit"
+                            class="absolute right-0 top-0 h-full px-6 bg-amber-500 hover:bg-amber-600 text-white rounded-r-lg transition-colors">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+
+                {{-- Live Search Results Dropdown --}}
+                <div id="search-results"
+                     class="absolute top-full left-0 right-0 bg-white shadow-xl rounded-b-lg mt-1 hidden z-50 max-h-96 overflow-y-auto border border-gray-200">
+                    <div id="search-results-content"></div>
+                </div>
+            </div>
 
             {{-- Icons --}}
             <div class="flex items-center gap-6">

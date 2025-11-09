@@ -178,7 +178,7 @@ class CheckoutController extends Controller
             return $item['price'] * $item['quantity'];
         });
 
-        $shipping = $subtotal >= 100 ? 0 : 15;
+        $shipping = $subtotal >= 100 ? 0 : 0;
         $tax = $subtotal * 0.08;
         $total = $subtotal + $shipping + $tax;
 

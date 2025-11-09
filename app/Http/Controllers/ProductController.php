@@ -129,4 +129,63 @@ class ProductController extends Controller
                 break;
         }
     }
+
+    /**
+     * API: Search products (returns JSON)
+     */
+    public function searchApi(Request $request)
+    {
+        $query = Product::with('category')->active();
+
+        // Apply search query
+        if ($request->filled('q')) {
+            $searchTerm = $request->q;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%")
+                  ->orWhere('sku', 'like', "%{$searchTerm}%")
+                  ->orWhere('brand', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Apply category filter
+        if ($request->filled('category')) {
+            if (is_numeric($request->category)) {
+                $query->where('category_id', $request->category);
+            } else {
+                $category = Category::where('slug', $request->category)->first();
+                if ($category) {
+                    $query->where('category_id', $category->id);
+                }
+            }
+        }
+
+        // Apply price filter
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        // Apply sorting
+        $this->applySorting($query, $request->get('sort', 'newest'));
+
+        // Pagination
+        $perPage = $request->get('per_page', 12);
+        $products = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $products->items(),
+            'pagination' => [
+                'total' => $products->total(),
+                'per_page' => $products->perPage(),
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'from' => $products->firstItem(),
+                'to' => $products->lastItem()
+            ]
+        ]);
+    }
 }

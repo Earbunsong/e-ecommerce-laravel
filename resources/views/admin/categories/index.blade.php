@@ -97,7 +97,8 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="mb-0">{{ $category->name }}</h5>
-                            <span class="badge {{ $category->is_active ? 'bg-success' : 'bg-secondary' }}">
+                            <span class="badge {{ $category->is_active ? 'bg-success' : 'bg-secondary' }}"
+                                  id="status-badge-{{ $category->id }}">
                                 {{ $category->is_active ? 'Active' : 'Inactive' }}
                             </span>
                         </div>
@@ -131,14 +132,14 @@
                            class="btn btn-sm btn-outline-success flex-fill">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <form action="{{ route('admin.categories.toggle-status', $category) }}"
-                              method="POST" class="flex-fill">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="btn btn-sm btn-outline-warning w-100">
-                                <i class="bi bi-lightning"></i>
-                            </button>
-                        </form>
+                        <button type="button"
+                                onclick="toggleCategoryStatus({{ $category->id }}, this)"
+                                class="btn btn-sm btn-outline-warning flex-fill"
+                                data-category-id="{{ $category->id }}"
+                                data-is-active="{{ $category->is_active ? '1' : '0' }}"
+                                title="Toggle Status">
+                            <i class="bi bi-lightning"></i>
+                        </button>
                         <button type="button" class="btn btn-sm btn-outline-danger"
                                 data-bs-toggle="modal" data-bs-target="#deleteModal{{ $category->id }}">
                             <i class="bi bi-trash"></i>
@@ -200,4 +201,84 @@
         {{ $categories->links() }}
     </div>
 @endif
+
+@push('scripts')
+<script>
+    // Toggle Category Status using API
+    function toggleCategoryStatus(categoryId, button) {
+        // Show loading state
+        const originalHtml = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-arrow-repeat spinner-border spinner-border-sm"></i>';
+        button.disabled = true;
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        // Call API endpoint
+        fetch(`/api/categories/${categoryId}/toggle-status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update status badge without page reload
+                const statusBadge = document.getElementById(`status-badge-${categoryId}`);
+                if (statusBadge) {
+                    if (data.data.is_active) {
+                        statusBadge.className = 'badge bg-success';
+                        statusBadge.textContent = 'Active';
+                    } else {
+                        statusBadge.className = 'badge bg-secondary';
+                        statusBadge.textContent = 'Inactive';
+                    }
+                }
+
+                // Show success toast
+                showToast(data.message, 'success');
+
+                // Update button data attribute
+                button.setAttribute('data-is-active', data.data.is_active ? '1' : '0');
+            } else {
+                showToast(data.message || 'Error updating status', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error updating category status', 'error');
+        })
+        .finally(() => {
+            // Reset button
+            button.innerHTML = originalHtml;
+            button.disabled = false;
+        });
+    }
+
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        const bgColor = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+        const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+
+        const toast = document.createElement('div');
+        toast.className = `alert alert-dismissible fade show position-fixed top-0 end-0 m-3 ${bgColor} text-white`;
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <i class="bi bi-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+</script>
+@endpush
 @endsection

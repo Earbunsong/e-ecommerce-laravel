@@ -146,7 +146,7 @@ class CartController extends Controller
             return $item['price'] * $item['quantity'];
         });
 
-        $shipping = $subtotal >= 100 ? 0 : 15;
+        $shipping = $subtotal >= 100 ? 0 : 0;
         $tax = $subtotal * 0.08;
         $total = $subtotal + $shipping + $tax;
 
@@ -157,5 +157,129 @@ class CartController extends Controller
     {
         $product = Product::active()->find($id);
         return $product ? $product->toArray() : null;
+    }
+
+    // ========================================
+    // API Methods for AJAX/JavaScript calls
+    // ========================================
+
+    /**
+     * API: Add product to cart (returns JSON)
+     */
+    public function addApi(Request $request, $id)
+    {
+        $product = $this->findProduct($id);
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        $cart = session('cart', []);
+        $quantity = $request->input('quantity', 1);
+
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] += $quantity;
+        } else {
+            $cart[$id] = [
+                'id' => $product['id'],
+                'name' => $product['name'],
+                'price' => $product['price'],
+                'image' => $product['image'],
+                'quantity' => $quantity,
+                'sku' => $product['sku'] ?? 'N/A'
+            ];
+        }
+
+        session(['cart' => $cart]);
+
+        $cartCount = collect($cart)->sum('quantity');
+        $cartTotal = collect($cart)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => $product['name'] . ' added to cart!',
+            'cart_count' => $cartCount,
+            'cart_total' => number_format($cartTotal, 2),
+            'item' => [
+                'id' => $product['id'],
+                'name' => $product['name'],
+                'price' => number_format($product['price'], 2),
+                'quantity' => $quantity
+            ]
+        ]);
+    }
+
+    /**
+     * API: Update cart item quantity
+     */
+    public function updateApi(Request $request, $id)
+    {
+        $cart = session('cart', []);
+        $quantity = (int) $request->input('quantity', 1);
+
+        if ($quantity <= 0) {
+            return $this->removeApi($request, $id);
+        }
+
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] = $quantity;
+            session(['cart' => $cart]);
+        }
+
+        $cartCount = collect($cart)->sum('quantity');
+        $itemTotal = isset($cart[$id]) ? $cart[$id]['price'] * $cart[$id]['quantity'] : 0;
+        $cartTotal = collect($cart)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        return response()->json([
+            'success' => true,
+            'cart_count' => $cartCount,
+            'item_total' => number_format($itemTotal, 2),
+            'cart_total' => number_format($cartTotal, 2)
+        ]);
+    }
+
+    /**
+     * API: Remove item from cart
+     */
+    public function removeApi(Request $request, $id)
+    {
+        $cart = session('cart', []);
+        $productName = isset($cart[$id]) ? $cart[$id]['name'] : 'Item';
+
+        unset($cart[$id]);
+        session(['cart' => $cart]);
+
+        $cartCount = collect($cart)->sum('quantity');
+        $cartTotal = collect($cart)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => $productName . ' removed from cart',
+            'cart_count' => $cartCount,
+            'cart_total' => number_format($cartTotal, 2)
+        ]);
+    }
+
+    /**
+     * API: Get cart count
+     */
+    public function count()
+    {
+        $cart = session('cart', []);
+        $cartCount = collect($cart)->sum('quantity');
+
+        return response()->json([
+            'success' => true,
+            'count' => $cartCount
+        ]);
     }
 }
