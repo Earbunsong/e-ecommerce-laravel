@@ -150,7 +150,7 @@
             @forelse($products as $product)
                 <tr>
                     <td>
-                        <img src="{{ asset('images/' . $product->image) }}"
+                        <img src="{{ asset('storage/' . $product->image) }}"
                              alt="{{ $product->name }}"
                              class="rounded"
                              style="width: 60px; height: 60px; object-fit: cover;">

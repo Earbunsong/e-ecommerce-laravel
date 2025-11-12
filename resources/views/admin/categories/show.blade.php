@@ -136,7 +136,7 @@
                                     @foreach($products as $product)
                                         <tr>
                                             <td>
-                                                <img src="{{ asset('images/' . $product->image) }}"
+                                                <img src="{{ asset('storage/' . $product->image) }}"
                                                      alt="{{ $product->name }}"
                                                      class="img-thumbnail"
                                                      style="width: 50px; height: 50px; object-fit: cover;">

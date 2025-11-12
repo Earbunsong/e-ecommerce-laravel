@@ -149,7 +149,7 @@
                 </div>
                 <div class="custom-card-body">
                     <div class="mb-3 text-center">
-                        <img src="{{ asset('images/' . $product->image) }}"
+                        <img src="{{ asset('storage/' . $product->image) }}"
                              alt="{{ $product->name }}"
                              class="img-fluid rounded"
                              id="current-image"

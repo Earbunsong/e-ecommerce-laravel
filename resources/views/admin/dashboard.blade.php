@@ -95,7 +95,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ asset('images/' . $product->image) }}"
+                                            <img src="{{ asset('storage/' . $product->image) }}"
                                                  alt="{{ $product->name }}"
                                                  class="rounded me-3"
                                                  style="width: 45px; height: 45px; object-fit: cover;">
@@ -194,7 +194,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ asset('images/' . $product->image) }}"
+                                            <img src="{{ asset('storage/' . $product->image) }}"
                                                  alt="{{ $product->name }}"
                                                  class="rounded me-3"
                                                  style="width: 40px; height: 40px; object-fit: cover;">
