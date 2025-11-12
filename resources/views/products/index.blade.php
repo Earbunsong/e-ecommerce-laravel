@@ -33,9 +33,9 @@
                         </li>
                         @foreach($categories as $cat)
                             <li>
-                                <a href="{{ route('products.index', array_merge(request()->all(), ['category' => $cat['name']])) }}"
-                                   class="text-gray-700 hover:text-amber-600 transition-colors {{ request('category') === $cat['name'] ? 'text-amber-600 font-semibold' : '' }}">
-                                    {{ $cat['name'] }} ({{ $cat['count'] }})
+                                <a href="{{ route('products.index', array_merge(request()->all(), ['category' => $cat->slug])) }}"
+                                   class="text-gray-700 hover:text-amber-600 transition-colors {{ request('category') === $cat->slug ? 'text-amber-600 font-semibold' : '' }}">
+                                    {{ $cat->name }} ({{ $cat->products_count }})
                                 </a>
                             </li>
                         @endforeach

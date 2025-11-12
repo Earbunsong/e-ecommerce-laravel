@@ -27,8 +27,17 @@
 
                         @foreach($cartItems as $item)
                             <div class="flex items-center gap-4 py-4 border-b last:border-b-0">
-                                <div class="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                                    <i class="fas fa-box text-gray-400"></i>
+                                <div class="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                                    @if(isset($item['image']) && $item['image'])
+                                        <img src="{{ asset('storage/' . $item['image']) }}"
+                                             alt="{{ $item['name'] }}"
+                                             class="w-full h-full object-cover"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gray-200\'><i class=\'fas fa-box text-gray-400\'></i></div>';">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                            <i class="fas fa-box text-gray-400"></i>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div class="flex-1">

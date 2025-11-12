@@ -21,8 +21,8 @@
                             </div>
                         </div>
                     </div>
-                    <h1 class="text-5xl font-bold mb-6 gradient-text">Payment Successful!</h1>
-                    <p class="text-xl text-gray-600 mb-8">Thank you for your purchase! Your order has been confirmed.</p>
+                    <h1 class="text-5xl md:text-6xl font-extrabold mb-6 success-text animate-bounce-in">Payment Successful!</h1>
+                    <p class="text-xl md:text-2xl text-white mb-8 font-medium">Thank you for your purchase! Your order has been confirmed.</p>
                     <div class="order-badge">
                         <span class="badge-label">Order Number</span>
                         <span class="badge-value">{{ $order->order_number }}</span>
@@ -287,11 +287,11 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <a href="{{ route('home') }}" class="btn-modern btn-secondary">
+                <a href="{{ route('home') }}" class="btn-modern btn-secondary-new">
                     <i class="fas fa-home"></i>
                     <span>Back to Home</span>
                 </a>
-                <a href="{{ route('products.index') }}" class="btn-modern btn-primary">
+                <a href="{{ route('products.index') }}" class="btn-modern btn-primary-new">
                     <i class="fas fa-shopping-bag"></i>
                     <span>Continue Shopping</span>
                 </a>
@@ -304,7 +304,7 @@
 <style>
 /* Success Page Wrapper */
 .success-page-wrapper {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
     min-height: 100vh;
     padding: 40px 0;
     position: relative;
@@ -442,6 +442,28 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.success-text {
+    color: #ffffff;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes bounce-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+.animate-bounce-in {
+    animation: bounce-in 0.8s ease-out;
 }
 
 .order-badge {
@@ -1001,6 +1023,39 @@
     color: white;
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+}
+
+/* New Modern Button Styles */
+.btn-modern.btn-primary-new {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-modern.btn-primary-new:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(245, 158, 11, 0.5);
+}
+
+.btn-modern.btn-secondary-new {
+    background: white;
+    color: #059669;
+    border: 3px solid white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-modern.btn-secondary-new:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: white;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 /* Responsive */

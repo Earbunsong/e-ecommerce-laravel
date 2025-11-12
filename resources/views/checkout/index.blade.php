@@ -333,9 +333,18 @@
                     <div class="p-6 max-h-96 overflow-y-auto">
                         @foreach($cartItems as $item)
                         <div class="flex items-center gap-3 pb-4 mb-4 border-b last:border-b-0">
-                            <div class="relative w-16 h-16 flex-shrink-0">
-                                <img src="{{ asset('images/' . $item['image']) }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover rounded-lg">
-                                <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">{{ $item['quantity'] }}</span>
+                            <div class="relative w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                @if(isset($item['image']) && $item['image'])
+                                    <img src="{{ asset('storage/' . $item['image']) }}"
+                                         alt="{{ $item['name'] }}"
+                                         class="w-full h-full object-cover"
+                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gray-200\'><i class=\'fas fa-box text-gray-400\'></i></div>';">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                        <i class="fas fa-box text-gray-400"></i>
+                                    </div>
+                                @endif
+                                <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-lg">{{ $item['quantity'] }}</span>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h6 class="font-semibold text-sm text-gray-900 truncate">{{ $item['name'] }}</h6>
