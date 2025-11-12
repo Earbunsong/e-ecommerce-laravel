@@ -36,7 +36,7 @@
                        class="group bg-white rounded-xl shadow-sm hover:shadow-lg overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
                         <div class="aspect-square relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                             @if($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}"
+                                <img src="{{ $category->image_url }}"
                                      alt="{{ $category->name }}"
                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                      loading="lazy"

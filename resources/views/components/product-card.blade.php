@@ -9,8 +9,8 @@
 <div class="bg-white rounded-lg shadow hover:shadow-lg transition-all product-card" data-product-id="{{ $product->id }}">
     <div class="relative">
         <a href="{{ route('products.show', $product->id) }}">
-            @if($product->image)
-                <img src="{{ asset('storage/' . $product->image) }}"
+            @if($product->image_url)
+                <img src="{{ $product->image_url }}"
                      alt="{{ $product->name }}"
                      class="h-48 w-full object-cover rounded-t-lg"
                      onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'h-48 w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-t-lg flex items-center justify-center\'><i class=\'fas fa-image text-6xl text-gray-400\'></i></div>';">

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Category extends Model
@@ -101,10 +102,15 @@ class Category extends Model
     }
 
     /**
-     * Accessor: Get image URL
+     * Accessor: Get image URL (works for both local and S3 storage)
      */
     public function getImageUrlAttribute()
     {
-        return $this->image ? asset('storage/' . $this->image) : asset('images/default-category.png');
+        if (!$this->image) {
+            return asset('images/default-category.png');
+        }
+
+        // Use Storage::url() which automatically handles both local and S3
+        return Storage::disk('public')->url($this->image);
     }
 }

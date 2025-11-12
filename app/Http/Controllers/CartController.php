@@ -37,11 +37,12 @@ class CartController extends Controller
         if (isset($cart[$id])) {
             $cart[$id]['quantity'] += $quantity;
         } else {
+            $productModel = Product::find($product['id']);
             $cart[$id] = [
                 'id' => $product['id'],
                 'name' => $product['name'],
                 'price' => $product['price'],
-                'image' => $product['image'],
+                'image' => $productModel ? $productModel->image_url : $product['image'],
                 'quantity' => $quantity,
                 'sku' => $product['sku'] ?? 'N/A'
             ];
@@ -130,7 +131,7 @@ class CartController extends Controller
             if ($product) {
                 return array_merge($item, [
                     'name' => $product->name,
-                    'image' => $product->image,
+                    'image' => $product->image_url,
                     'price' => (float) $product->price,
                     'in_stock' => $product->in_stock,
                     'stock_quantity' => $product->stock_quantity
@@ -183,11 +184,12 @@ class CartController extends Controller
         if (isset($cart[$id])) {
             $cart[$id]['quantity'] += $quantity;
         } else {
+            $productModel = Product::find($product['id']);
             $cart[$id] = [
                 'id' => $product['id'],
                 'name' => $product['name'],
                 'price' => $product['price'],
-                'image' => $product['image'],
+                'image' => $productModel ? $productModel->image_url : $product['image'],
                 'quantity' => $quantity,
                 'sku' => $product['sku'] ?? 'N/A'
             ];

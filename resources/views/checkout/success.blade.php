@@ -139,8 +139,8 @@
                         @foreach($order->items as $item)
                         <div class="order-item-card">
                             <div class="item-image">
-                                @if($item->product && $item->product->image)
-                                <img src="{{ asset('storage/' . $item->product->image) }}"
+                                @if($item->product && $item->product->image_url)
+                                <img src="{{ $item->product->image_url }}"
                                      alt="{{ $item->product_name }}">
                                 @else
                                 <div class="image-placeholder">

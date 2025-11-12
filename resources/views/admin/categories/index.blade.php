@@ -81,7 +81,7 @@
                     <!-- Category Image/Icon -->
                     <div class="text-center mb-3">
                         @if($category->image)
-                            <img src="{{ asset('storage/' . $category->image) }}"
+                            <img src="{{ $category->image_url }}"
                                  alt="{{ $category->name }}"
                                  class="rounded"
                                  style="width: 100%; height: 180px; object-fit: cover;">

@@ -13,7 +13,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <div class="flex justify-center">
-                <img src="{{ asset('storage/'.$product->image) }}"
+                <img src="{{ $product->image_url }}"
                      alt="{{ $product->name }}"
                      class="w-full max-w-md h-auto rounded-lg shadow-lg object-contain"
                      onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full max-w-md h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg flex items-center justify-center\'><i class=\'fas fa-image text-9xl text-gray-400\'></i></div>';"></div>

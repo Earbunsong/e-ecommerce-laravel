@@ -30,7 +30,7 @@
                 <div class="card-body">
                     @if($category->image)
                         <div class="text-center mb-4">
-                            <img src="{{ asset('storage/' . $category->image) }}"
+                            <img src="{{ $category->image_url }}"
                                  alt="{{ $category->name }}"
                                  class="img-fluid rounded"
                                  style="max-height: 250px;">
@@ -136,7 +136,7 @@
                                     @foreach($products as $product)
                                         <tr>
                                             <td>
-                                                <img src="{{ asset('storage/' . $product->image) }}"
+                                                <img src="{{ $product->image_url }}"
                                                      alt="{{ $product->name }}"
                                                      class="img-thumbnail"
                                                      style="width: 50px; height: 50px; object-fit: cover;">

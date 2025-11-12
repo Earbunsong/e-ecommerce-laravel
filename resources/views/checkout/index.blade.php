@@ -335,7 +335,7 @@
                         <div class="flex items-center gap-3 pb-4 mb-4 border-b last:border-b-0">
                             <div class="relative w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                                 @if(isset($item['image']) && $item['image'])
-                                    <img src="{{ asset('storage/' . $item['image']) }}"
+                                    <img src="{{ $item['image'] }}"
                                          alt="{{ $item['name'] }}"
                                          class="w-full h-full object-cover"
                                          onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gray-200\'><i class=\'fas fa-box text-gray-400\'></i></div>';">

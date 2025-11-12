@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -152,6 +153,19 @@ class Product extends Model
             return 'Low Stock';
         }
         return 'In Stock';
+    }
+
+    /**
+     * Accessor: Get image URL (works for both local and S3 storage)
+     */
+    public function getImageUrlAttribute()
+    {
+        if (!$this->image) {
+            return null;
+        }
+
+        // Use Storage::url() which automatically handles both local and S3
+        return Storage::disk('public')->url($this->image);
     }
 
     /**
