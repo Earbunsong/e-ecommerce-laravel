@@ -54,6 +54,12 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug: Log all request data
+        \Log::info('Product creation attempt', [
+            'all_data' => $request->all(),
+            'has_file' => $request->hasFile('image'),
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -63,7 +69,7 @@ class ProductController extends Controller
             'brand' => 'required|string|max:100',
             'sku' => 'required|string|max:50|unique:products,sku',
             'stock_quantity' => 'required|integer|min:0',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'rating' => 'nullable|numeric|min:0|max:5',
             'review_count' => 'nullable|integer|min:0',
             'specs' => 'nullable|array',
@@ -75,6 +81,8 @@ class ProductController extends Controller
             'is_featured' => 'nullable|boolean',
             'is_active' => 'nullable|boolean'
         ]);
+
+        \Log::info('Product validation passed', ['validated_data' => $validated]);
 
         // Handle image upload
         if ($request->hasFile('image')) {

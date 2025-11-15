@@ -15,6 +15,18 @@
     </nav>
 </div>
 
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please fix the following errors:</h5>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row g-4">
@@ -207,13 +219,13 @@
                     </div>
                     <div class="custom-card-body">
                         <div class="mb-3">
-                            <label for="image" class="form-label">Image <span class="text-danger">*</span></label>
+                            <label for="image" class="form-label">Image</label>
                             <input type="file" class="form-control @error('image') is-invalid @enderror"
-                                   id="image" name="image" accept="image/*" required>
+                                   id="image" name="image" accept="image/*">
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted d-block mt-2">Max 2MB, JPEG/PNG/JPG/GIF</small>
+                            <small class="text-muted d-block mt-2">Max 2MB, JPEG/PNG/JPG/GIF (Optional)</small>
                         </div>
 
                         <div id="image-preview" class="mt-2 text-center"></div>
@@ -258,6 +270,41 @@
 
 @push('scripts')
 <script>
+    // Debug form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const submitBtn = document.querySelector('button[type="submit"]');
+
+        console.log('Form found:', form);
+        console.log('Submit button found:', submitBtn);
+
+        form.addEventListener('submit', function(e) {
+            console.log('Form submit event triggered!');
+            console.log('Form action:', form.action);
+            console.log('Form method:', form.method);
+
+            // Check if all required fields are filled
+            const requiredFields = form.querySelectorAll('[required]');
+            let allFilled = true;
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    console.log('Empty required field:', field.name, field.id);
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                console.log('Some required fields are empty - form will not submit');
+            } else {
+                console.log('All required fields filled - form should submit');
+            }
+        });
+
+        submitBtn.addEventListener('click', function(e) {
+            console.log('Submit button clicked!');
+        });
+    });
+
     // Add specification field
     document.getElementById('add-spec').addEventListener('click', function() {
         const container = document.getElementById('specs-container');
