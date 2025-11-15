@@ -164,7 +164,12 @@ class Product extends Model
             return null;
         }
 
-        // Use Storage::url() which automatically handles both local and S3
+        // Check if using S3/R2 (cloud storage)
+        if (config('filesystems.default') === 's3') {
+            return Storage::disk('s3')->url($this->image);
+        }
+
+        // Use public disk for local storage
         return Storage::disk('public')->url($this->image);
     }
 

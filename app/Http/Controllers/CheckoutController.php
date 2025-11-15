@@ -124,17 +124,7 @@ class CheckoutController extends Controller
                 // Mark as confirmed and clear cart
                 $order->update(['status' => 'processing']);
 
-                // Send order confirmation email
-                try {
-                    $customerEmail = $order->customer_info['email'] ?? null;
-                    if ($customerEmail) {
-                        Mail::to($customerEmail)->send(new OrderConfirmation($order));
-                    }
-                } catch (\Exception $e) {
-                    // Log error but don't stop the checkout process
-                    \Log::error('Failed to send order confirmation email: ' . $e->getMessage());
-                }
-
+                // Email will be sent on checkout success page
                 // Clear cart
                 session()->forget('cart');
 
@@ -155,6 +145,23 @@ class CheckoutController extends Controller
 
         if (!$order) {
             return redirect()->route('home')->with('error', 'Order not found');
+        }
+
+        // Send order confirmation email on checkout success
+        // Skip if already sent for KHQR payments (sent after payment verification)
+        $shouldSendEmail = $order->payment_method !== 'khqr' || $order->payment_status === 'pending';
+
+        if ($shouldSendEmail) {
+            try {
+                $customerEmail = $order->customer_info['email'] ?? null;
+                if ($customerEmail) {
+                    Mail::to($customerEmail)->send(new OrderConfirmation($order));
+                    \Log::info('Checkout success email sent', ['order_number' => $orderNumber]);
+                }
+            } catch (\Exception $e) {
+                // Log error but don't stop the success page display
+                \Log::error('Failed to send checkout success email: ' . $e->getMessage());
+            }
         }
 
         // Clear the cart after successful order

@@ -78,7 +78,9 @@ class ProductController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+            // Use default disk (will use s3 if configured, or public for local)
+            $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+            $imagePath = $request->file('image')->store('products', $disk);
             $validated['image'] = $imagePath;
         }
 
@@ -158,11 +160,15 @@ class ProductController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
+            // Use default disk (will use s3 if configured, or public for local)
+            $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+
             // Delete old image
             if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+                Storage::disk($disk)->delete($product->image);
             }
-            $imagePath = $request->file('image')->store('products', 'public');
+
+            $imagePath = $request->file('image')->store('products', $disk);
             $validated['image'] = $imagePath;
         }
 

@@ -77,7 +77,9 @@ class CategoryController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('categories', 'public');
+            // Use default disk (will use s3 if configured, or public for local)
+            $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+            $validated['image'] = $request->file('image')->store('categories', $disk);
         }
 
         // Set defaults
@@ -130,11 +132,15 @@ class CategoryController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
+            // Use default disk (will use s3 if configured, or public for local)
+            $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+
             // Delete old image
             if ($category->image) {
-                Storage::disk('public')->delete($category->image);
+                Storage::disk($disk)->delete($category->image);
             }
-            $validated['image'] = $request->file('image')->store('categories', 'public');
+
+            $validated['image'] = $request->file('image')->store('categories', $disk);
         }
 
         // Handle is_active checkbox - default to current value
