@@ -33,12 +33,24 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/search', [ProductController::class, 'search'])->name('products.search');
 
+// Product Search API (for AJAX live search)
+Route::get('/api/products/search', [ProductController::class, 'searchApi'])->name('api.products.search');
+Route::get('/api/products', [ProductController::class, 'searchApi'])->name('api.products.index');
+
 // Cart Routes - FIXED
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::post('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+// Cart API Routes (for AJAX calls with CSRF protection)
+Route::prefix('api/cart')->name('api.cart.')->group(function () {
+    Route::post('/add/{id}', [CartController::class, 'addApi'])->name('add');
+    Route::post('/update/{id}', [CartController::class, 'updateApi'])->name('update');
+    Route::post('/remove/{id}', [CartController::class, 'removeApi'])->name('remove');
+    Route::get('/count', [CartController::class, 'count'])->name('count');
+});
 
 // Wishlist Routes
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');

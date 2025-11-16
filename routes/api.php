@@ -21,14 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Cart API Routes - Using web middleware for session support
-Route::middleware('web')->prefix('cart')->name('api.cart.')->group(function () {
-    Route::post('/add/{id}', [CartController::class, 'addApi'])->name('add');
-    Route::post('/update/{id}', [CartController::class, 'updateApi'])->name('update');
-    Route::post('/remove/{id}', [CartController::class, 'removeApi'])->name('remove');
-    Route::get('/count', [CartController::class, 'count'])->name('count');
-});
-
 // Category API Routes (for admin)
 Route::prefix('categories')->name('api.categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
@@ -38,7 +30,3 @@ Route::prefix('categories')->name('api.categories.')->group(function () {
     Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
     Route::patch('/{id}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('toggle-status');
 });
-
-// Product Search API (must be before /products/{id})
-Route::get('/products/search', [ProductController::class, 'searchApi'])->name('api.products.search');
-Route::get('/products', [ProductController::class, 'searchApi'])->name('api.products.index');
