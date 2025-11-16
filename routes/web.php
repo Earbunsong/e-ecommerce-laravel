@@ -37,6 +37,22 @@ Route::get('/search', [ProductController::class, 'search'])->name('products.sear
 Route::get('/api/products/search', [ProductController::class, 'searchApi'])->name('api.products.search');
 Route::get('/api/products', [ProductController::class, 'searchApi'])->name('api.products.index');
 
+// Debug route for testing session/CSRF (remove in production after testing)
+Route::get('/debug/session', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'csrf_token' => csrf_token(),
+        'session_driver' => config('session.driver'),
+        'session_secure' => config('session.secure'),
+        'session_domain' => config('session.domain'),
+        'session_same_site' => config('session.same_site'),
+        'app_env' => config('app.env'),
+        'app_url' => config('app.url'),
+        'session_works' => session()->has('_token'),
+        'cookies' => request()->cookies->all(),
+    ]);
+})->name('debug.session');
+
 // Cart Routes - FIXED
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');

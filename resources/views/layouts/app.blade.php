@@ -111,18 +111,31 @@
         const originalText = button.html();
         button.html('<i class="fas fa-spinner fa-spin mr-2"></i>Adding...').prop('disabled', true);
 
+        // Get CSRF token
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+        // Debug log
+        console.log('Adding to cart:', { productId, quantity, csrfToken: csrfToken ? 'present' : 'missing' });
+
         // Use API endpoint instead of traditional route
         $.ajax({
             url: `/api/cart/add/${productId}`,
             method: 'POST',
             data: {
-                quantity: quantity
+                quantity: quantity,
+                _token: csrfToken  // Add token to data payload as well
             },
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            xhrFields: {
+                withCredentials: true  // Include cookies in request
             }
         })
             .done(function(response) {
+                console.log('Cart success:', response);
                 if (response.success) {
                     showNotification(response.message, 'success');
                     updateCartCount(response.cart_count);
@@ -134,8 +147,18 @@
                 }
             })
             .fail(function(xhr) {
+                console.error('Cart error:', xhr.status, xhr.responseText);
                 const response = xhr.responseJSON;
-                showNotification(response?.message || 'Error adding to cart', 'error');
+
+                // Better error messages
+                let errorMsg = 'Error adding to cart';
+                if (xhr.status === 419) {
+                    errorMsg = 'Session expired. Please refresh the page.';
+                } else if (response && response.message) {
+                    errorMsg = response.message;
+                }
+
+                showNotification(errorMsg, 'error');
             })
             .always(function() {
                 // Reset button
@@ -189,11 +212,20 @@
     // Remove from Cart - Using API
     function removeFromCart(productId) {
         if (confirm('Remove this item from cart?')) {
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
             $.ajax({
                 url: `/api/cart/remove/${productId}`,
                 method: 'POST',
+                data: {
+                    _token: csrfToken
+                },
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                xhrFields: {
+                    withCredentials: true
                 }
             })
                 .done(function(response) {
@@ -203,8 +235,9 @@
                         location.reload();
                     }
                 })
-                .fail(function() {
-                    showNotification('Error removing item', 'error');
+                .fail(function(xhr) {
+                    let errorMsg = xhr.status === 419 ? 'Session expired. Please refresh.' : 'Error removing item';
+                    showNotification(errorMsg, 'error');
                 });
         }
     }
