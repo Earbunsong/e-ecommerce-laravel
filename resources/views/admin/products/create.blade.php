@@ -186,7 +186,7 @@
                         <div class="mb-3">
                             <label for="stock_quantity" class="form-label">Stock Quantity <span class="text-danger">*</span></label>
                             <input type="number" class="form-control @error('stock_quantity') is-invalid @enderror"
-                                   id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 0) }}" required>
+                                   id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 10) }}" required>
                             @error('stock_quantity')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -239,7 +239,7 @@
                     </div>
                     <div class="custom-card-body">
                         <div class="form-check form-switch mb-3">
-                            <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}>
+                            <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" value="1" {{ old('is_featured', true) ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_featured">
                                 <strong>Featured Product</strong>
                                 <small class="d-block text-muted">Show on homepage</small>
@@ -270,100 +270,117 @@
 
 @push('scripts')
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitBtn = document.querySelector('button[type="submit"]');
+
+    console.log('=== FORM DEBUG INFO ===');
+    console.log('Form element:', form);
+    console.log('Form action:', form?.action);
+    console.log('Submit button:', submitBtn);
+
     // Debug form submission
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        const submitBtn = document.querySelector('button[type="submit"]');
-
-        console.log('Form found:', form);
-        console.log('Submit button found:', submitBtn);
-
+    if (form) {
         form.addEventListener('submit', function(e) {
-            console.log('Form submit event triggered!');
-            console.log('Form action:', form.action);
-            console.log('Form method:', form.method);
+            console.log('✅ Form submit event fired!');
+            console.log('Form is valid:', form.checkValidity());
 
-            // Check if all required fields are filled
+            // Check required fields
             const requiredFields = form.querySelectorAll('[required]');
-            let allFilled = true;
             requiredFields.forEach(field => {
                 if (!field.value) {
-                    console.log('Empty required field:', field.name, field.id);
-                    allFilled = false;
+                    console.error('❌ Empty required field:', field.name, field.id);
+                } else {
+                    console.log('✅ Field OK:', field.name, '=', field.value);
                 }
             });
-
-            if (!allFilled) {
-                console.log('Some required fields are empty - form will not submit');
-            } else {
-                console.log('All required fields filled - form should submit');
-            }
         });
+    }
 
+    // Debug button click
+    if (submitBtn) {
         submitBtn.addEventListener('click', function(e) {
-            console.log('Submit button clicked!');
+            console.log('🖱️ Submit button clicked!');
+            console.log('Button type:', this.type);
+            console.log('Button disabled:', this.disabled);
         });
-    });
+    }
 
     // Add specification field
-    document.getElementById('add-spec').addEventListener('click', function() {
-        const container = document.getElementById('specs-container');
-        const div = document.createElement('div');
-        div.className = 'input-group mb-2';
-        div.innerHTML = `
-            <input type="text" class="form-control" name="specs[]" placeholder="e.g., Intel Core i5 Processor">
-            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
-        container.appendChild(div);
-    });
+    const addSpecBtn = document.getElementById('add-spec');
+    if (addSpecBtn) {
+        addSpecBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const container = document.getElementById('specs-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="specs[]" placeholder="e.g., Intel Core i5 Processor">
+                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+    }
 
     // Add color field
-    document.getElementById('add-color').addEventListener('click', function() {
-        const container = document.getElementById('colors-container');
-        const div = document.createElement('div');
-        div.className = 'input-group mb-2';
-        div.innerHTML = `
-            <input type="text" class="form-control" name="colors[]" placeholder="e.g., Black">
-            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
-        container.appendChild(div);
-    });
+    const addColorBtn = document.getElementById('add-color');
+    if (addColorBtn) {
+        addColorBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const container = document.getElementById('colors-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="colors[]" placeholder="e.g., Black">
+                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+    }
 
     // Add storage option field
-    document.getElementById('add-storage').addEventListener('click', function() {
-        const container = document.getElementById('storage-container');
-        const div = document.createElement('div');
-        div.className = 'input-group mb-2';
-        div.innerHTML = `
-            <input type="text" class="form-control" name="storage_options[]" placeholder="e.g., 256GB">
-            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
-        container.appendChild(div);
-    });
+    const addStorageBtn = document.getElementById('add-storage');
+    if (addStorageBtn) {
+        addStorageBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const container = document.getElementById('storage-container');
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" class="form-control" name="storage_options[]" placeholder="e.g., 256GB">
+                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+    }
 
     // Image preview
-    document.getElementById('image').addEventListener('change', function(e) {
-        const preview = document.getElementById('image-preview');
-        preview.innerHTML = '';
+    const imageInput = document.getElementById('image');
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
 
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.className = 'img-thumbnail';
-                img.style.maxHeight = '200px';
-                preview.appendChild(img);
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    });
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-thumbnail';
+                    img.style.maxHeight = '200px';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    }
+});
 </script>
 @endpush
 @endsection
