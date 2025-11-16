@@ -49,6 +49,7 @@ class CartController extends Controller
         }
 
         session(['cart' => $cart]);
+        session()->save(); // Force session save for production
 
         if ($request->ajax()) {
             $cartCount = collect($cart)->sum('quantity');
@@ -56,6 +57,7 @@ class CartController extends Controller
                 'success' => true,
                 'message' => $product['name'] . ' added to cart!',
                 'cart_count' => $cartCount,
+                'cart_items' => $cart, // Return full cart for debugging
                 'item' => [
                     'name' => $product['name'],
                     'price' => number_format($product['price'], 2),
@@ -196,17 +198,28 @@ class CartController extends Controller
         }
 
         session(['cart' => $cart]);
+        session()->save(); // Force session save for production
 
         $cartCount = collect($cart)->sum('quantity');
         $cartTotal = collect($cart)->sum(function ($item) {
             return $item['price'] * $item['quantity'];
         });
 
+        // Debug info
+        \Log::info('Cart added', [
+            'product_id' => $id,
+            'session_id' => session()->getId(),
+            'cart_count' => $cartCount,
+            'cart_items' => count($cart)
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => $product['name'] . ' added to cart!',
             'cart_count' => $cartCount,
             'cart_total' => number_format($cartTotal, 2),
+            'cart_items' => $cart, // Return full cart for debugging
+            'session_id' => session()->getId(), // Debug: session ID
             'item' => [
                 'id' => $product['id'],
                 'name' => $product['name'],

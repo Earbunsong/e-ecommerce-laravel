@@ -49,6 +49,8 @@ Route::get('/debug/session', function () {
         'app_env' => config('app.env'),
         'app_url' => config('app.url'),
         'session_works' => session()->has('_token'),
+        'cart_in_session' => session('cart', []),
+        'cart_count' => collect(session('cart', []))->sum('quantity'),
         'cookies' => request()->cookies->all(),
     ]);
 })->name('debug.session');
