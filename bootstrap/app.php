@@ -12,12 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Exclude cart and wishlist API routes from CSRF verification
-        // This is a temporary fix for production - proper fix is to configure sessions correctly
+        // CSRF Protection is ENABLED for all routes
+        // Cart routes properly send CSRF tokens via JavaScript
+        // Only exclude read-only product search API
         $middleware->validateCsrfTokens(except: [
-            'api/cart/*',
-            'api/products/*',
-            'wishlist/*',
+            'api/products/search',  // Read-only search endpoint
+            'api/products',         // Read-only product list
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

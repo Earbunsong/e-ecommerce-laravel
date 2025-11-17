@@ -81,6 +81,7 @@ class CartController extends Controller
         if (isset($cart[$id])) {
             $cart[$id]['quantity'] = $quantity;
             session(['cart' => $cart]);
+            session()->save(); // Force session save for production
         }
 
         if ($request->ajax()) {
@@ -104,6 +105,7 @@ class CartController extends Controller
 
         unset($cart[$id]);
         session(['cart' => $cart]);
+        session()->save(); // Force session save for production
 
         if ($request->ajax()) {
             $cartCount = collect($cart)->sum('quantity');
@@ -198,8 +200,9 @@ class CartController extends Controller
             ];
         }
 
-        // Save to session - Laravel handles persistence automatically
+        // Save to session and force persistence for production
         session(['cart' => $cart]);
+        session()->save(); // Critical for production/HTTPS environments
 
         $cartCount = collect($cart)->sum('quantity');
         $cartTotal = collect($cart)->sum(function ($item) {
@@ -235,6 +238,7 @@ class CartController extends Controller
         if (isset($cart[$id])) {
             $cart[$id]['quantity'] = $quantity;
             session(['cart' => $cart]);
+            session()->save(); // Force session save for production
         }
 
         $cartCount = collect($cart)->sum('quantity');
@@ -261,6 +265,7 @@ class CartController extends Controller
 
         unset($cart[$id]);
         session(['cart' => $cart]);
+        session()->save(); // Force session save for production
 
         $cartCount = collect($cart)->sum('quantity');
         $cartTotal = collect($cart)->sum(function ($item) {

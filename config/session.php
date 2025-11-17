@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'cookie'),
+    'driver' => env('SESSION_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -156,7 +156,8 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    // Auto-detect domain: null for local, .laravel.cloud for production
+    'domain' => env('SESSION_DOMAIN', str_contains(config('app.url'), 'laravel.cloud') ? '.laravel.cloud' : null),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +170,9 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
+    // Auto-enable secure cookies on production (HTTPS)
+    // Local: false (HTTP), Production: true (HTTPS)
+    'secure' => env('SESSION_SECURE_COOKIE', false),
 
     /*
     |--------------------------------------------------------------------------
