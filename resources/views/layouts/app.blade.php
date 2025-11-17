@@ -180,11 +180,30 @@
                 // Better error messages
                 let errorMsg = 'Error adding to cart';
                 if (xhr.status === 419) {
-                    errorMsg = 'Session expired. Please refresh the page.';
-                    // Reload page to get fresh CSRF token
-                    setTimeout(() => window.location.reload(), 2000);
+                    errorMsg = '⚠️ Session issue detected. Reloading page...';
+                    showNotification(errorMsg, 'error');
+
+                    // Try to get fresh CSRF token first
+                    fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' })
+                        .then(() => {
+                            // Get new token
+                            return fetch('/api/cart/count', { credentials: 'same-origin' });
+                        })
+                        .then(() => {
+                            // Token refreshed, reload page
+                            setTimeout(() => window.location.reload(), 1000);
+                        })
+                        .catch(() => {
+                            // Fallback: just reload
+                            setTimeout(() => window.location.reload(), 1000);
+                        });
+                    return;
                 } else if (response && response.message) {
                     errorMsg = response.message;
+                } else if (xhr.status === 0) {
+                    errorMsg = 'Network error. Please check your connection.';
+                } else if (xhr.status === 500) {
+                    errorMsg = 'Server error. Please try again.';
                 }
 
                 showNotification(errorMsg, 'error');

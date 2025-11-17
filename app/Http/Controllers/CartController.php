@@ -173,6 +173,11 @@ class CartController extends Controller
      */
     public function addApi(Request $request, $id)
     {
+        // Force session start if not started
+        if (!session()->isStarted()) {
+            session()->start();
+        }
+
         $product = $this->findProduct($id);
 
         if (!$product) {

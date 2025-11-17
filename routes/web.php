@@ -37,6 +37,43 @@ Route::get('/search', [ProductController::class, 'search'])->name('products.sear
 Route::get('/api/products/search', [ProductController::class, 'searchApi'])->name('api.products.search');
 Route::get('/api/products', [ProductController::class, 'searchApi'])->name('api.products.index');
 
+// Test route to verify session cookie creation
+Route::get('/test-session-cookie', function () {
+    // Force session start
+    if (!session()->isStarted()) {
+        session()->start();
+    }
+
+    // Set a test value
+    session(['test_time' => now()->toDateTimeString()]);
+    session()->save();
+
+    $cookieName = config('session.cookie');
+
+    return response()->json([
+        'status' => 'Session test successful ✅',
+        'session_started' => session()->isStarted(),
+        'session_id' => session()->getId(),
+        'session_driver' => config('session.driver'),
+        'cookie_config' => [
+            'name' => $cookieName,
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+            'http_only' => config('session.http_only'),
+            'same_site' => config('session.same_site'),
+            'path' => config('session.path'),
+        ],
+        'test_value' => session('test_time'),
+        'instructions' => [
+            '1' => 'Check browser DevTools > Application/Storage > Cookies',
+            '2' => "Look for cookie named: {$cookieName}",
+            '3' => 'Cookie should have domain: ' . (config('session.domain') ?? 'null (current domain)'),
+            '4' => 'If no cookie appears, session cookies are being blocked',
+            '5' => 'Refresh this page - test_time value should persist if session works'
+        ]
+    ]);
+})->name('test.session.cookie');
+
 // Debug route for testing session/CSRF (remove in production after testing)
 Route::get('/debug/session', function () {
     $isHttps = request()->secure();
@@ -85,7 +122,8 @@ Route::post('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 // Cart API Routes (for AJAX calls with CSRF protection)
-Route::prefix('api/cart')->name('api.cart.')->group(function () {
+// IMPORTANT: These MUST stay in web.php to get session middleware
+Route::prefix('api/cart')->name('api.cart.')->middleware('web')->group(function () {
     Route::post('/add/{id}', [CartController::class, 'addApi'])->name('add');
     Route::post('/update/{id}', [CartController::class, 'updateApi'])->name('update');
     Route::post('/remove/{id}', [CartController::class, 'removeApi'])->name('remove');
