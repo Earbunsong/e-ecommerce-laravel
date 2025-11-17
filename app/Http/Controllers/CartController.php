@@ -10,18 +10,21 @@ class CartController extends Controller
 {
     public function index()
     {
-        // Ensure session is started
-        if (!session()->isStarted()) {
-            session()->start();
-        }
+        // Get cart from session (don't manually start session, let middleware handle it)
+        $cart = session()->get('cart', []);
 
-        $cart = session('cart', []);
+        // Ensure cart is an array
+        if (!is_array($cart)) {
+            $cart = [];
+        }
 
         // Debug log
         \Log::info('Cart index viewed', [
             'session_id' => session()->getId(),
-            'cart_count' => is_array($cart) ? count($cart) : 0,
-            'cart_data' => $cart
+            'cart_count' => count($cart),
+            'cart_keys' => array_keys($cart),
+            'has_session' => session()->has('cart'),
+            'all_session_keys' => array_keys(session()->all())
         ]);
 
         $cartItems = $this->getCartItemsWithDetails($cart);
@@ -184,11 +187,6 @@ class CartController extends Controller
      */
     public function addApi(Request $request, $id)
     {
-        // Start session if not started
-        if (!session()->isStarted()) {
-            session()->start();
-        }
-
         $product = $this->findProduct($id);
 
         if (!$product) {
@@ -199,35 +197,39 @@ class CartController extends Controller
         }
 
         // Get cart from session, ensuring it's an array
-        $cart = session('cart', []);
+        $cart = session()->get('cart', []);
         if (!is_array($cart)) {
             $cart = [];
         }
 
         $quantity = $request->input('quantity', 1);
 
-        if (isset($cart[$id])) {
-            $cart[$id]['quantity'] += $quantity;
+        // Use string key for consistency
+        $productKey = (string) $id;
+
+        if (isset($cart[$productKey])) {
+            $cart[$productKey]['quantity'] += $quantity;
         } else {
             $productModel = Product::find($product['id']);
-            $cart[$id] = [
+            $cart[$productKey] = [
                 'id' => $product['id'],
                 'name' => $product['name'],
-                'price' => $product['price'],
+                'price' => (float) $product['price'],
                 'image' => $productModel ? $productModel->image_url : $product['image'],
-                'quantity' => $quantity,
+                'quantity' => (int) $quantity,
                 'sku' => $product['sku'] ?? 'N/A'
             ];
         }
 
-        // Set cart in session
+        // Set cart in session using put
         session()->put('cart', $cart);
 
-        // Force save and regenerate to ensure persistence
+        // Force immediate save to storage
         session()->save();
 
-        // Wait a moment to ensure session is written
-        usleep(50000); // 50ms delay
+        // Verify the save worked
+        $verifyCart = session()->get('cart', []);
+        $saveSuccess = isset($verifyCart[$productKey]);
 
         $cartCount = collect($cart)->sum('quantity');
         $cartTotal = collect($cart)->sum(function ($item) {
@@ -237,11 +239,14 @@ class CartController extends Controller
         // Debug info
         \Log::info('Cart added via API', [
             'product_id' => $id,
+            'product_key' => $productKey,
             'session_id' => session()->getId(),
             'cart_count' => $cartCount,
             'cart_items' => count($cart),
             'session_driver' => config('session.driver'),
-            'cart_data' => $cart
+            'save_verified' => $saveSuccess,
+            'cart_keys' => array_keys($cart),
+            'verify_cart_keys' => array_keys($verifyCart)
         ]);
 
         return response()->json([
@@ -249,8 +254,8 @@ class CartController extends Controller
             'message' => $product['name'] . ' added to cart!',
             'cart_count' => $cartCount,
             'cart_total' => number_format($cartTotal, 2),
-            'cart_items' => $cart, // Return full cart for debugging
-            'session_id' => session()->getId(), // Debug: session ID
+            'save_verified' => $saveSuccess,
+            'session_id' => session()->getId(),
             'item' => [
                 'id' => $product['id'],
                 'name' => $product['name'],
@@ -324,12 +329,7 @@ class CartController extends Controller
      */
     public function count()
     {
-        // Ensure session is started
-        if (!session()->isStarted()) {
-            session()->start();
-        }
-
-        $cart = session('cart', []);
+        $cart = session()->get('cart', []);
         if (!is_array($cart)) {
             $cart = [];
         }
@@ -340,14 +340,16 @@ class CartController extends Controller
         \Log::info('Cart count requested', [
             'session_id' => session()->getId(),
             'count' => $cartCount,
-            'items' => count($cart)
+            'items' => count($cart),
+            'cart_keys' => array_keys($cart)
         ]);
 
         return response()->json([
             'success' => true,
             'count' => $cartCount,
             'items' => count($cart),
-            'session_id' => session()->getId()
+            'session_id' => session()->getId(),
+            'cart_keys' => array_keys($cart)
         ])->withHeaders([
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
