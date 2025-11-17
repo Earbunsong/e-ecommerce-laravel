@@ -99,6 +99,21 @@
             }
         });
 
+        // Check for cart added message in localStorage
+        const cartAdded = localStorage.getItem('cart_added');
+        if (cartAdded) {
+            try {
+                const data = JSON.parse(cartAdded);
+                // Only show if less than 5 seconds old
+                if (Date.now() - data.timestamp < 5000) {
+                    showNotification(data.message, 'success');
+                }
+            } catch (e) {
+                console.error('Error parsing cart_added:', e);
+            }
+            localStorage.removeItem('cart_added');
+        }
+
         // Update cart count on page load
         updateCartCount();
         updateWishlistCount();
@@ -122,23 +137,35 @@
             url: `/api/cart/add/${productId}`,
             method: 'POST',
             data: {
+                product_id: productId,  // Send product_id explicitly
                 quantity: quantity,
-                _token: csrfToken  // Add token to data payload as well
+                _token: csrfToken
             },
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                'X-Requested-With': 'XMLHttpRequest'  // Important for Laravel to recognize AJAX
             },
             xhrFields: {
                 withCredentials: true  // Include cookies in request
-            }
+            },
+            cache: false  // Prevent caching issues
         })
             .done(function(response) {
                 console.log('Cart success:', response);
                 if (response.success) {
                     showNotification(response.message, 'success');
                     updateCartCount(response.cart_count);
+
+                    // Reload page after adding to cart to ensure session sync
+                    // This is a temporary fix to ensure cart data persists
+                    setTimeout(function() {
+                        // Store flash message in localStorage
+                        localStorage.setItem('cart_added', JSON.stringify({
+                            message: response.message,
+                            timestamp: Date.now()
+                        }));
+                    }, 500);
 
                     // Show mini cart with animation
                     if (response.item) {
@@ -154,6 +181,8 @@
                 let errorMsg = 'Error adding to cart';
                 if (xhr.status === 419) {
                     errorMsg = 'Session expired. Please refresh the page.';
+                    // Reload page to get fresh CSRF token
+                    setTimeout(() => window.location.reload(), 2000);
                 } else if (response && response.message) {
                     errorMsg = response.message;
                 }
@@ -245,10 +274,22 @@
     // Update cart count display
     function updateCartCount(count = null) {
         if (count === null) {
-            // Get count from page load
-            count = {{ session('cart') ? array_sum(array_column(session('cart'), 'quantity')) : 0 }};
+            // Fetch from server to ensure accuracy
+            $.get('/api/cart/count', function(response) {
+                if (response.success) {
+                    updateCartBadge(response.count);
+                }
+            }).fail(function() {
+                // Fallback to page load count
+                const fallbackCount = {{ session('cart') ? array_sum(array_column(session('cart'), 'quantity')) : 0 }};
+                updateCartBadge(fallbackCount);
+            });
+        } else {
+            updateCartBadge(count);
         }
+    }
 
+    function updateCartBadge(count) {
         const $cartBadge = $('#cartCount');
         if (count > 0) {
             $cartBadge.text(count).removeClass('hidden');

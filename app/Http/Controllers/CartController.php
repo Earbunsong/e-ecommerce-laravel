@@ -10,7 +10,20 @@ class CartController extends Controller
 {
     public function index()
     {
+        // Ensure session is started
+        if (!session()->isStarted()) {
+            session()->start();
+        }
+
         $cart = session('cart', []);
+
+        // Debug log
+        \Log::info('Cart index viewed', [
+            'session_id' => session()->getId(),
+            'cart_count' => is_array($cart) ? count($cart) : 0,
+            'cart_data' => $cart
+        ]);
+
         $cartItems = $this->getCartItemsWithDetails($cart);
         $calculations = $this->calculateTotals($cartItems);
 
@@ -171,6 +184,11 @@ class CartController extends Controller
      */
     public function addApi(Request $request, $id)
     {
+        // Start session if not started
+        if (!session()->isStarted()) {
+            session()->start();
+        }
+
         $product = $this->findProduct($id);
 
         if (!$product) {
@@ -180,7 +198,12 @@ class CartController extends Controller
             ], 404);
         }
 
+        // Get cart from session, ensuring it's an array
         $cart = session('cart', []);
+        if (!is_array($cart)) {
+            $cart = [];
+        }
+
         $quantity = $request->input('quantity', 1);
 
         if (isset($cart[$id])) {
@@ -197,8 +220,14 @@ class CartController extends Controller
             ];
         }
 
-        session(['cart' => $cart]);
-        session()->save(); // Force session save for production
+        // Set cart in session
+        session()->put('cart', $cart);
+
+        // Force save and regenerate to ensure persistence
+        session()->save();
+
+        // Wait a moment to ensure session is written
+        usleep(50000); // 50ms delay
 
         $cartCount = collect($cart)->sum('quantity');
         $cartTotal = collect($cart)->sum(function ($item) {
@@ -206,11 +235,13 @@ class CartController extends Controller
         });
 
         // Debug info
-        \Log::info('Cart added', [
+        \Log::info('Cart added via API', [
             'product_id' => $id,
             'session_id' => session()->getId(),
             'cart_count' => $cartCount,
-            'cart_items' => count($cart)
+            'cart_items' => count($cart),
+            'session_driver' => config('session.driver'),
+            'cart_data' => $cart
         ]);
 
         return response()->json([
@@ -226,6 +257,10 @@ class CartController extends Controller
                 'price' => number_format($product['price'], 2),
                 'quantity' => $quantity
             ]
+        ])->withHeaders([
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
         ]);
     }
 
@@ -289,12 +324,34 @@ class CartController extends Controller
      */
     public function count()
     {
+        // Ensure session is started
+        if (!session()->isStarted()) {
+            session()->start();
+        }
+
         $cart = session('cart', []);
+        if (!is_array($cart)) {
+            $cart = [];
+        }
+
         $cartCount = collect($cart)->sum('quantity');
+
+        // Debug log
+        \Log::info('Cart count requested', [
+            'session_id' => session()->getId(),
+            'count' => $cartCount,
+            'items' => count($cart)
+        ]);
 
         return response()->json([
             'success' => true,
-            'count' => $cartCount
+            'count' => $cartCount,
+            'items' => count($cart),
+            'session_id' => session()->getId()
+        ])->withHeaders([
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
         ]);
     }
 }
