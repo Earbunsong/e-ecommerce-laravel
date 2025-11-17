@@ -39,19 +39,41 @@ Route::get('/api/products', [ProductController::class, 'searchApi'])->name('api.
 
 // Debug route for testing session/CSRF (remove in production after testing)
 Route::get('/debug/session', function () {
+    $isHttps = request()->secure();
+    $secureCookie = config('session.secure');
+    $willWork = ($isHttps && $secureCookie) || (!$isHttps && !$secureCookie);
+
     return response()->json([
-        'session_id' => session()->getId(),
-        'csrf_token' => csrf_token(),
-        'session_driver' => config('session.driver'),
-        'session_secure' => config('session.secure'),
-        'session_domain' => config('session.domain'),
-        'session_same_site' => config('session.same_site'),
-        'app_env' => config('app.env'),
-        'app_url' => config('app.url'),
-        'session_works' => session()->has('_token'),
-        'cart_in_session' => session('cart', []),
-        'cart_count' => collect(session('cart', []))->sum('quantity'),
-        'cookies' => request()->cookies->all(),
+        '⚠️ DIAGNOSIS' => [
+            'cart_will_work' => $willWork,
+            'problem' => !$willWork ? '🔴 SESSION_SECURE_COOKIE must be TRUE for HTTPS sites!' : '✅ Configuration looks correct',
+            'action_required' => !$willWork ? 'Set SESSION_SECURE_COOKIE=true in Laravel Cloud environment variables' : 'None'
+        ],
+        'HTTPS_STATUS' => [
+            'site_uses_https' => $isHttps,
+            'app_url' => config('app.url'),
+        ],
+        'SESSION_CONFIG' => [
+            'driver' => config('session.driver'),
+            'secure_cookie' => $secureCookie ? 'TRUE ✅' : 'FALSE ❌ (THIS IS THE PROBLEM)',
+            'domain' => config('session.domain') ?? 'null',
+            'same_site' => config('session.same_site'),
+        ],
+        'CURRENT_SESSION' => [
+            'session_id' => session()->getId(),
+            'cart_count' => collect(session('cart', []))->sum('quantity'),
+            'cart_items' => session('cart', []),
+        ],
+        '📋 FIX_INSTRUCTIONS' => !$willWork ? [
+            'STEP_1' => 'Login to Laravel Cloud Dashboard',
+            'STEP_2' => 'Select your project: e-ecommerce-laravel-main',
+            'STEP_3' => 'Go to Environment Variables section',
+            'STEP_4' => 'Add variable: SESSION_SECURE_COOKIE with value: true',
+            'STEP_5' => 'Add variable: SESSION_DOMAIN with value: .laravel.cloud',
+            'STEP_6' => 'Click Save',
+            'STEP_7' => 'Wait 2-3 minutes for deployment',
+            'STEP_8' => 'Refresh this page to verify fix'
+        ] : 'Configuration is correct! If cart still not working, check browser cookies.'
     ]);
 })->name('debug.session');
 
